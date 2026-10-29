@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2A1E">
+<title>Cane Permit Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF1EA;
+  --card:#FFFFFF;
+  --card-2:#F6F8F3;
+  --line:#D6DCD0;
+  --line-strong:#B9C2B2;
+  --ink:#1B2A1E;
+  --ink-2:#4A5A4D;
+  --ink-3:#7C8A7E;
+  --cane:#2E7D4F;
+  --cane-ink:#FFFFFF;
+  --cane-soft:#DDEFE3;
+  --amber:#B8701A;
+  --amber-soft:#F7E9D2;
+  --teal:#1F6F78;
+  --teal-soft:#D7EBED;
+  --blue:#2F5F9E;
+  --blue-soft:#DCE6F5;
+  --red:#B23A2E;
+  --red-soft:#F6DEDA;
+  --grey:#6B736C;
+  --grey-soft:#E4E7E2;
+  --header:#1B2A1E;
+  --header-ink:#F2F5EE;
+  --focus:#2E7D4F;
+  --rail:#CBD3C6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121813;
+    --card:#1A221C;
+    --card-2:#212B23;
+    --line:#2C372E;
+    --line-strong:#3E4B40;
+    --ink:#E6ECE3;
+    --ink-2:#AEBBB0;
+    --ink-3:#7F8C81;
+    --cane:#4FA86F;
+    --cane-ink:#0E1A11;
+    --cane-soft:#1F3A28;
+    --amber:#E0A04A;
+    --amber-soft:#3C2E18;
+    --teal:#5FB7C0;
+    --teal-soft:#193538;
+    --blue:#7FA5DE;
+    --blue-soft:#1C2A3F;
+    --red:#E0766A;
+    --red-soft:#3F2320;
+    --grey:#9AA39B;
+    --grey-soft:#2A322B;
+    --header:#0D120E;
+    --header-ink:#E6ECE3;
+    --focus:#4FA86F;
+    --rail:#3A463C;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121813;
+  --card:#1A221C;
+  --card-2:#212B23;
+  --line:#2C372E;
+  --line-strong:#3E4B40;
+  --ink:#E6ECE3;
+  --ink-2:#AEBBB0;
+  --ink-3:#7F8C81;
+  --cane:#4FA86F;
+  --cane-ink:#0E1A11;
+  --cane-soft:#1F3A28;
+  --amber:#E0A04A;
+  --amber-soft:#3C2E18;
+  --teal:#5FB7C0;
+  --teal-soft:#193538;
+  --blue:#7FA5DE;
+  --blue-soft:#1C2A3F;
+  --red:#E0766A;
+  --red-soft:#3F2320;
+  --grey:#9AA39B;
+  --grey-soft:#2A322B;
+  --header:#0D120E;
+  --header-ink:#E6ECE3;
+  --focus:#4FA86F;
+  --rail:#3A463C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{
+  margin:0;min-height:100%;
+  background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--header)}
+h1,h2,h3{margin:0;font-weight:600;line-height:1.25}
+h1{font-size:18px}
+h2{font-size:20px;margin-bottom:4px}
+h3{font-size:15px;margin-bottom:8px}
+p{margin:0 0 10px}
+a{color:var(--cane)}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+img{max-width:100%}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-2)}
+.faint{color:var(--ink-3)}
+.small{font-size:13px}
+
+/* header */
+.top{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:9;
+  background:var(--header);color:var(--header-ink);
+  display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:52px;
+}
+.top .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.top .brand .mark{width:28px;height:28px;border-radius:7px;background:var(--cane);display:grid;place-items:center;flex:none}
+.top .brand .mark svg{width:18px;height:18px}
+.top .brand .sub{font-size:12px;opacity:.7;display:block}
+.top .who{display:flex;align-items:center;gap:8px;min-width:0}
+.top .who img{width:28px;height:28px;border-radius:50%;flex:none}
+.top .who .n{font-size:13px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .who .r{font-size:11px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+
+/* tabs */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:9;
+  background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom,0px);
+}
+nav.tabs button{
+  flex:1;background:none;border:0;padding:9px 4px 8px;color:var(--ink-3);
+  font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  border-top:2px solid transparent;margin-top:-1px;
+}
+nav.tabs button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button.on{color:var(--cane);border-top-color:var(--cane)}
+nav.tabs button .b{position:absolute;margin-left:22px;margin-top:-4px;background:var(--amber);color:#fff;font-size:10px;padding:0 5px;border-radius:9px;line-height:16px;min-width:16px;text-align:center}
+nav.tabs button{position:relative}
+
+main{max-width:1040px;margin:0 auto;padding:16px 16px 92px}
+@media (min-width:860px){
+  nav.tabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);bottom:auto;border-top:0;border-bottom:1px solid var(--line);justify-content:center;gap:4px;padding:0 16px}
+  nav.tabs button{flex:0 0 auto;flex-direction:row;padding:12px 14px;font-size:14px;border-top:0;border-bottom:2px solid transparent;margin:0}
+  nav.tabs button.on{border-bottom-color:var(--cane)}
+  nav.tabs button .b{position:static;margin:0 0 0 4px}
+  main{padding:24px 24px 60px}
+}
+
+/* cards & layout */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.card.flat{background:var(--card-2)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.grid{display:grid;gap:12px}
+@media (min-width:640px){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr 1fr}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+@media (min-width:640px){.stats{grid-template-columns:repeat(6,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .v{font-size:24px;font-weight:600;line-height:1.1}
+.stat .l{font-size:12px;color:var(--ink-2);margin-top:2px}
+.stat.hi{border-color:var(--cane);background:var(--cane-soft)}
+.stat.hi .v{color:var(--cane)}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--line-strong);background:var(--card);color:var(--ink);
+  padding:9px 14px;border-radius:8px;font-weight:500;min-height:40px;
+}
+.btn:hover{background:var(--card-2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--cane);border-color:var(--cane);color:var(--cane-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.warn{color:var(--amber);border-color:var(--amber)}
+.btn.sm{padding:5px 10px;min-height:32px;font-size:13px}
+.btn.block{width:100%}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.linkish{background:none;border:0;color:var(--cane);padding:0;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+:where(button,input,select,textarea,a):focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:13px;font-weight:500;color:var(--ink-2)}
+.field label .req{color:var(--red)}
+.field input,.field select,.field textarea{
+  background:var(--card);border:1px solid var(--line-strong);border-radius:8px;
+  padding:10px 12px;min-height:42px;width:100%;
+}
+.field textarea{min-height:70px;resize:vertical}
+.field.err input,.field.err select,.field.err textarea{border-color:var(--red)}
+.field .hint{font-size:12px;color:var(--ink-3)}
+.field .errmsg{font-size:12px;color:var(--red)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 0}
+.check input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--cane)}
+.section{margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.section .n{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:13px;font-weight:600;flex:none}
+.section h3{margin:0;font-size:16px}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:640px){.photos{grid-template-columns:repeat(3,1fr)}}
+.photo{border:1px dashed var(--line-strong);border-radius:10px;background:var(--card-2);aspect-ratio:4/3;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;gap:6px}
+.photo.has{border-style:solid}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:5px 8px;display:flex;justify-content:space-between;align-items:center}
+.photo .cap button{background:none;border:0;color:#fff;text-decoration:underline;font-size:12px;padding:0}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo.err{border-color:var(--red)}
+.photo svg{width:26px;height:26px;stroke:var(--ink-3);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.photo .t{font-size:13px;font-weight:500}
+.sig{border:1px solid var(--line-strong);border-radius:10px;background:#fff;height:170px;touch-action:none;display:block;width:100%}
+.sigwrap{position:relative}
+.sigwrap .ghost{position:absolute;left:12px;bottom:10px;font-size:12px;color:#9AA39B;pointer-events:none}
+.sigwrap .clr{position:absolute;right:8px;top:8px}
+.terms{background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.55;max-height:220px;overflow:auto}
+.terms b{font-weight:600}
+.submitbar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));background:var(--bg);padding:10px 0 4px;margin-top:14px;display:flex;gap:10px}
+@media (min-width:860px){.submitbar{bottom:0}}
+
+/* status */
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:14px;padding:2px 10px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.t-amber{background:var(--amber-soft);color:var(--amber)}
+.t-red{background:var(--red-soft);color:var(--red)}
+.t-blue{background:var(--blue-soft);color:var(--blue)}
+.t-teal{background:var(--teal-soft);color:var(--teal)}
+.t-green{background:var(--cane-soft);color:var(--cane)}
+.t-grey{background:var(--grey-soft);color:var(--grey)}
+
+/* the rail: 4 stops of the permit journey */
+.rail{display:flex;align-items:center;gap:0;margin:6px 0}
+.rail .stop{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;min-width:0}
+.rail .stop .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--rail);background:var(--card);z-index:1}
+.rail .stop .lbl{font-size:11px;color:var(--ink-3);margin-top:5px;text-align:center;white-space:nowrap}
+.rail .stop::before{content:"";position:absolute;top:6px;left:-50%;right:50%;height:2px;background:var(--rail)}
+.rail .stop:first-child::before{display:none}
+.rail .stop.done .dot{background:var(--cane);border-color:var(--cane)}
+.rail .stop.done::before{background:var(--cane)}
+.rail .stop.done .lbl{color:var(--ink)}
+.rail .stop.cur .dot{background:var(--card);border-color:var(--cane);box-shadow:0 0 0 3px var(--cane-soft)}
+.rail .stop.cur .lbl{color:var(--cane);font-weight:600}
+.rail .stop.halt .dot{background:var(--red);border-color:var(--red)}
+.rail .stop.halt .lbl{color:var(--red)}
+.rail.mini .lbl{display:none}
+.rail.mini{width:96px;margin:0}
+.rail.mini .stop .dot{width:10px;height:10px}
+.rail.mini .stop::before{top:4px}
+
+/* entry rows */
+.list{display:flex;flex-direction:column;gap:8px}
+.erow{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  display:grid;grid-template-columns:1fr auto;gap:4px 12px;cursor:pointer;text-align:left;width:100%;color:var(--ink)
+}
+.erow:hover{border-color:var(--line-strong)}
+.erow .name{font-weight:600;font-size:15px}
+.erow .meta{font-size:13px;color:var(--ink-2)}
+.erow .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.erow .permit{font-size:13px;color:var(--teal);font-weight:600}
+.empty{padding:28px 16px;text-align:center;color:var(--ink-2);border:1px dashed var(--line-strong);border-radius:10px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters .btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{flex:1;min-width:180px}
+.search input{width:100%;background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:9px 12px;min-height:40px}
+
+/* detail */
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:14px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+@media (max-width:480px){.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:640px){.gallery{grid-template-columns:repeat(4,1fr)}}
+.gallery figure{margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card-2)}
+.gallery figure img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#fff}
+.gallery figcaption{font-size:12px;padding:6px 8px;color:var(--ink-2)}
+.hist{list-style:none;margin:0;padding:0;font-size:13.5px}
+.hist li{display:grid;grid-template-columns:118px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.hist .when{color:var(--ink-3);font-size:12.5px}
+.note{background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:10px 12px;font-size:14px}
+.note.red{background:var(--red-soft);color:var(--red)}
+.note.green{background:var(--cane-soft);color:var(--cane)}
+.note.blue{background:var(--blue-soft);color:var(--blue)}
+.banner{background:var(--amber-soft);color:var(--amber);padding:10px 16px;font-size:14px;text-align:center}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;
+  opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center
+}
+.toast.show{opacity:1}
+@media (min-width:860px){.toast{bottom:28px}}
+.spin{width:18px;height:18px;border:2px solid var(--line-strong);border-top-color:var(--cane);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}.toast{transition:none}}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+table.tbl th,table.tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.tbl th{color:var(--ink-2);font-weight:500;font-size:13px}
+.rolepick{display:flex;flex-wrap:wrap;gap:6px 14px}
+.rolepick label{display:flex;gap:6px;align-items:center;font-size:14px}
+.rolepick input{accent-color:var(--cane);width:17px;height:17px}
+.people{display:flex;flex-direction:column;gap:8px}
+.person{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card-2);flex-wrap:wrap}
+.person img{width:30px;height:30px;border-radius:50%}
+.person .pn{font-weight:500;min-width:140px}
+.pill{display:inline-block;background:var(--grey-soft);color:var(--ink-2);border-radius:12px;padding:1px 8px;font-size:12px;margin-right:4px}
+.center{text-align:center;padding:40px 16px;color:var(--ink-2)}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink-2);padding:0;margin-bottom:12px;font-weight:500}
+.back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+
+/* login & account */
+.login{max-width:420px;margin:40px auto 0}
+.login .mark{width:44px;height:44px;border-radius:10px;background:var(--cane);display:grid;place-items:center;margin-bottom:14px}
+.login .mark svg{width:26px;height:26px}
+.acct{position:relative}
+.acct .menu{position:absolute;right:0;top:40px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:190px;z-index:11;color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.acct .menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 10px;border-radius:7px;color:var(--ink);font-size:14px}
+.acct .menu button:hover{background:var(--card-2)}
+.acct > button{background:none;border:0;color:var(--header-ink);display:flex;align-items:center;gap:8px;padding:4px;border-radius:8px}
+.acct > button .av{width:28px;height:28px;border-radius:50%;background:var(--cane);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
+.cred{background:var(--cane-soft);border:1px solid var(--cane);border-radius:8px;padding:12px 14px;margin-top:12px;font-size:14px}
+.cred code{font-family:inherit;font-weight:600;font-size:15px;background:var(--card);padding:1px 6px;border-radius:4px}
+.utable{width:100%;border-collapse:collapse;font-size:14px}
+.utable th,.utable td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.utable th{color:var(--ink-2);font-weight:500;font-size:13px}
+.utable .rolepick label{font-size:13px}
+.utable .ops{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:720px){
+  .utable thead{display:none}
+  .utable tr{display:block;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:10px;background:var(--card-2)}
+  .utable td{display:block;border:0;padding:4px 0}
+  .utable td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--ink-3)}
+}
+.offline{background:var(--red-soft);color:var(--red)}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V8"/><path d="M12 13c0-3 2.5-5 6-5"/><path d="M12 10C12 7 9.5 5 6 5"/><path d="M12 17c0-3 2.5-5 6-5"/><path d="M12 14c0-3-2.5-5-6-5"/></svg></div>
+    <div style="min-width:0">
+      <h1>Cane Permit Tracker</h1>
+      <span class="sub">Field capture to permit and zoning</span>
+    </div>
+  </div>
+  <div class="who" id="who"></div>
+</div>
+<div id="banner"></div>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<main id="main"><div class="center"><span class="spin"></span> Loading…</div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+
+/* ======== SETTINGS — paste your Apps Script Web app URL here ======== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyVN327xRLKHMi-ncPwaowB6fbQ24219aT5NroyNxENIB9vzDTEE7eC2bQbUNSQYEU_/exec';
+const POLL_MS = 45000;
+/* ==================================================================== */
+
+/* ---------- constants ---------- */
+const ROLE_DEFS = {
+  admin:   {label:'Administrator', desc:'Manages users, settings and can act in every role'},
+  scout:   {label:'Field scout',   desc:'Captures farmer and field details in the field'},
+  checker: {label:'Data checker',  desc:'Verifies submissions and pushes them to the ERP'},
+  permits: {label:'Permit officer',desc:'Generates the permit in the ERP and records its number'},
+  zoning:  {label:'Zoning (GIS)',  desc:'Confirms inspection and polygons, assigns zone, CBC and linear distance'},
+};
+const ALL_ROLES = Object.keys(ROLE_DEFS);
+const STATUS = {
+  submitted:    {label:'Awaiting data check',     tone:'amber', step:1},
+  returned:     {label:'Returned for correction', tone:'red',   step:1},
+  rejected:     {label:'Rejected',                tone:'grey',  step:1},
+  pushed:       {label:'Pushed to ERP',           tone:'blue',  step:2},
+  permit_issued:{label:'Permit issued',           tone:'teal',  step:3},
+  zoned:        {label:'Zoned',                   tone:'green', step:4},
+};
+const STEPS = ['Captured','Pushed to ERP','Permit issued','Zoned'];
+const TABS = [
+  {id:'capture', label:'My entries',  roles:['scout'],   icon:'<svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V9l6-5 6 5v11"/><path d="M10 20v-6h4v6"/></svg>'},
+  {id:'check',   label:'Data check',  roles:['checker'], icon:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>'},
+  {id:'permits', label:'Permits',     roles:['permits'], icon:'<svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 18h6"/></svg>'},
+  {id:'zoning',  label:'Zoning',      roles:['zoning'],  icon:'<svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>'},
+  {id:'board',   label:'All entries', roles:['*'],       icon:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>'},
+  {id:'admin',   label:'Admin',       roles:['admin'],   icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'},
+];
+const DEFAULT_CONFIG = {cbcs:[],zones:[],areas:[],sublocations:[],acreageUnit:'acres'};
+const TERMS = 'I, {NAME} of ID no. {ID} hereby give an undertaking and warrant that the land which I intend to contract with the Miller for cane farming is free from any encumbrances, third party claims, rights or interests and or dispute(s) prejudicial to the Miller. I confirm that I have not contracted the said piece of land/sugarcane with any other Miller. I am aware that the Miller’s decision to enter into contract with me shall be based on my representations herein and that I shall indemnify the Miller for any loss and/or damage it may sustain by acting on my representations.';
+const SESSION_KEY='cpt.session';
+
+/* ---------- state ---------- */
+const S = {
+  token:null,me:null,
+  entries:[],since:'',names:{},users:[],config:Object.assign({},DEFAULT_CONFIG),
+  loaded:false,syncing:false,lastSync:0,offline:false,
+  tab:null,view:'list',detailId:null,detailStamp:null,draft:null,
+  imgCache:{},boardFilter:'all',boardQuery:'',busy:false,newCred:null,
+};
+
+/* ---------- helpers ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nowISO = ()=>new Date().toISOString();
+function fmt(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function fmtD(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+let toastT=null;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
+function errMsg(e){ return (e&&e.message)?e.message:String(e); }
+function myRoles(){ return (S.me&&S.me.roles)||[]; }
+const isAdmin = ()=>myRoles().includes('admin');
+const hasRole = x=>isAdmin()||myRoles().includes(x);
+function visibleTabs(){ return TABS.filter(t=>t.roles.includes('*')||t.roles.some(r=>hasRole(r))); }
+function statusOf(e){ return STATUS[e.status]||{label:e.status||'Unknown',tone:'grey',step:0}; }
+function chip(e){ const s=statusOf(e); return '<span class="chip t-'+s.tone+'">'+esc(s.label)+'</span>'; }
+function rail(e,mini){
+  const st=statusOf(e); const step=st.step; const halt=(e.status==='returned'||e.status==='rejected');
+  let h='<div class="rail'+(mini?' mini':'')+'" aria-label="'+esc(st.label)+'">';
+  STEPS.forEach((lbl,i)=>{
+    const n=i+1; let cls='stop';
+    if(n<=step) cls+=(halt&&n===step)?' halt':' done';
+    else if(n===step+1) cls+=' cur';
+    h+='<div class="'+cls+'"><div class="dot"></div><div class="lbl">'+esc(lbl)+'</div></div>';
+  });
+  return h+'</div>';
+}
+function who(u){ return u?esc(S.names[u]||u):'<span class="faint">—</span>'; }
+function setHash(t){ try{ if(location.hash!=='#'+t) history.replaceState(null,'','#'+t); }catch(e){} }
+function saveSession(){ try{ localStorage.setItem(SESSION_KEY,JSON.stringify({token:S.token,me:S.me})); }catch(e){} }
+function loadSession(){ try{ const j=JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); if(j&&j.token&&j.me){ S.token=j.token; S.me=j.me; } }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+function cbcSelect(id,name,current,required){
+  const list=(S.config.cbcs||[]).slice();
+  if(current&&!list.includes(current)) list.unshift(current);
+  if(!list.length) return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+' disabled><option value="">No CBCs set up yet</option></select><div class="hint">Ask an administrator to add the cane buying centres under Admin, Reference lists.</div>';
+  return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+(required?' required':'')+'><option value=""'+(current?'':' selected')+'>Select a CBC</option>'+list.map(x=>'<option value="'+esc(x)+'"'+(x===current?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>';
+}
+
+/* ---------- API ---------- */
+const apiConfigured = ()=>/^https:\/\/script\.google\.com\/macros\//.test(API_URL);
+async function api(action,payload){
+  if(!apiConfigured()) throw new Error('The page is not connected to its backend yet (API_URL in index.html).');
+  const body=JSON.stringify(Object.assign({action:action,token:S.token},payload||{}));
+  let res;
+  try{ res=await fetch(API_URL,{method:'POST',body:body}); }
+  catch(e){ S.offline=true; renderBanner(); throw new Error('No connection to the server. Check your network and try again.'); }
+  let j;
+  try{ j=await res.json(); }
+  catch(e){ throw new Error('Unexpected reply from the server. Check the Web app deployment (Execute as Me, access Anyone).'); }
+  if(S.offline){ S.offline=false; renderBanner(); }
+  if(!j.ok){
+    if(j.code==='auth'){ logout(true); }
+    throw new Error(j.error||'Request failed');
+  }
+  return j;
+}
+function mergeEntries(list){
+  if(!list||!list.length) return;
+  const m={}; S.entries.forEach(e=>{ m[e.id]=e; });
+  list.forEach(e=>{ m[e.id]=e; });
+  S.entries=Object.values(m).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+}
+async function sync(full){
+  if(S.syncing||!S.token) return; S.syncing=true;
+  try{
+    const r=await api('list',{since:full?'':S.since});
+    if(full) S.entries=[];
+    mergeEntries(r.entries);
+    S.since=new Date(Date.parse(r.now)-120000).toISOString();
+    S.config=Object.assign({},DEFAULT_CONFIG,r.config||{});
+    S.names=r.names||{}; if(r.users) S.users=r.users;
+    S.loaded=true; S.lastSync=Date.now();
+    onData('entries');
+  }catch(e){
+    if(!S.loaded&&S.token){ $('#main').innerHTML='<div class="card"><h3>Could not load data</h3><p class="muted">'+esc(errMsg(e))+'</p><button class="btn primary" id="retry">Try again</button></div>'; const b=$('#retry'); if(b) b.addEventListener('click',()=>sync(true)); }
+  }finally{ S.syncing=false; }
+}
+function startPolling(){
+  if(S.pollT) clearInterval(S.pollT);
+  S.pollT=setInterval(()=>{ if(document.visibilityState==='visible'&&S.view!=='form') sync(false); },POLL_MS);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&S.token&&Date.now()-S.lastSync>8000&&S.view!=='form') sync(false); });
+}
+function logout(expired){
+  S.token=null; S.me=null; S.entries=[]; S.since=''; S.loaded=false; S.users=[]; S.view='list'; S.tab=null; S.draft=null;
+  clearSession(); if(S.pollT) clearInterval(S.pollT);
+  renderWho(); renderTabs(); renderLogin(expired?'Your sign-in has expired. Sign in again.':'');
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  loadSession();
+  renderBanner();
+  if(!S.token){ renderLogin(''); return; }
+  renderWho(); enterApp();
+}
+async function enterApp(){
+  if(S.me.mustChange){ renderChangePassword(true); return; }
+  $('#main').innerHTML='<div class="center"><span class="spin"></span> Loading…</div>';
+  await sync(true);
+  startPolling();
+}
+function renderBanner(){
+  const b=$('#banner'); if(!b) return;
+  if(!apiConfigured()) { b.innerHTML='<div class="banner">Setup needed: paste the Apps Script Web app URL into API_URL at the top of index.html.</div>'; return; }
+  b.innerHTML=S.offline?'<div class="banner offline">No connection. Showing the last data loaded; changes will fail until the network is back.</div>':'';
+}
+function onData(src){
+  if(!S.loaded) return;
+  const tabs=visibleTabs();
+  if(!S.tab||!tabs.find(t=>t.id===S.tab)){
+    const h=(location.hash||'').slice(1);
+    S.tab=(tabs.find(t=>t.id===h)||tabs[0]||{id:null}).id;
+  }
+  renderWho(); renderTabs();
+  if(S.view==='form'||S.view==='password') return;
+  if(S.view==='detail'&&src==='entries'){ if(detailStamp()===S.detailStamp) return; }
+  if(S.tab==='admin'&&S.view==='list'&&src==='entries') return;
+  render();
+}
+function detailStamp(){ const e=S.entries.find(x=>x.id===S.detailId); return e?(e.updatedAt+'|'+e.status):'gone'; }
+
+/* ---------- login / password ---------- */
+function renderLogin(msg){
+  $('#tabs').innerHTML=''; $('#who').innerHTML='';
+  $('#main').innerHTML='<div class="login"><div class="card">'+
+    '<div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V8"/><path d="M12 13c0-3 2.5-5 6-5"/><path d="M12 10C12 7 9.5 5 6 5"/><path d="M12 17c0-3 2.5-5 6-5"/><path d="M12 14c0-3-2.5-5-6-5"/></svg></div>'+
+    '<h2>Sign in</h2><p class="muted">Use the username and password given to you by the administrator.</p>'+
+    (msg?'<div class="note red" style="margin-bottom:12px">'+esc(msg)+'</div>':'')+
+    '<form id="loginForm"><div class="field"><label for="lu">Username</label><input id="lu" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>'+
+    '<div class="field"><label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password" required></div>'+
+    '<div id="loginErr"></div><button class="btn primary block" id="loginBtn" type="submit">Sign in</button></form>'+
+    '<p class="small faint" style="margin-top:14px">Forgotten your password? Ask an administrator to set a new temporary one.</p></div></div>';
+  $('#loginForm').addEventListener('submit',async ev=>{
+    ev.preventDefault(); const btn=$('#loginBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Signing in…'; $('#loginErr').innerHTML='';
+    try{
+      const r=await api('login',{username:$('#lu').value.trim(),password:$('#lp').value});
+      S.token=r.token; S.me=r.user; saveSession(); renderWho(); enterApp();
+    }catch(e){ $('#loginErr').innerHTML='<div class="note red" style="margin-bottom:12px">'+esc(errMsg(e))+'</div>'; btn.disabled=false; btn.textContent='Sign in'; }
+  });
+  $('#lu').focus();
+}
+function renderChangePassword(forced){
+  S.view='password'; $('#tabs').innerHTML='';
+  $('#main').innerHTML='<div class="login"><div class="card"><h2>'+(forced?'Choose your password':'Change password')+'</h2>'+
+    '<p class="muted">'+(forced?'You signed in with a temporary password. Choose your own before continuing.':'Enter your current password and a new one.')+'</p>'+
+    '<form id="pwForm"><div class="field"><label for="pc">'+(forced?'Temporary password':'Current password')+'</label><input id="pc" type="password" autocomplete="current-password" required></div>'+
+    '<div class="field"><label for="pn">New password</label><input id="pn" type="password" autocomplete="new-password" required minlength="8"><div class="hint">At least 8 characters.</div></div>'+
+    '<div class="field"><label for="pn2">Repeat new password</label><input id="pn2" type="password" autocomplete="new-password" required></div>'+
+    '<div id="pwErr"></div><div class="actions"><button class="btn primary" id="pwBtn" type="submit">Save password</button>'+(forced?'':'<button class="btn" type="button" id="pwCancel">Cancel</button>')+'</div></form></div></div>';
+  $('#pwForm').addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    if($('#pn').value!==$('#pn2').value){ $('#pwErr').innerHTML='<div class="note red" style="margin-bottom:12px">The two new passwords do not match.</div>'; return; }
+    const btn=$('#pwBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…'; $('#pwErr').innerHTML='';
+    try{
+      const r=await api('changePassword',{current:$('#pc').value,next:$('#pn').value});
+      S.token=r.token; S.me=r.user; saveSession(); toast('Password saved');
+      S.view='list'; renderWho(); if(S.loaded){ renderTabs(); render(); startPolling(); } else enterApp();
+    }catch(e){ $('#pwErr').innerHTML='<div class="note red" style="margin-bottom:12px">'+esc(errMsg(e))+'</div>'; btn.disabled=false; btn.textContent='Save password'; }
+  });
+  const c=$('#pwCancel'); if(c) c.addEventListener('click',()=>{ S.view='list'; renderTabs(); render(); });
+  $('#pc').focus();
+}
+
+/* ---------- chrome ---------- */
+function renderWho(){
+  const w=$('#who');
+  if(!S.me){ w.innerHTML=''; return; }
+  const rs=myRoles().map(r=>(ROLE_DEFS[r]||{label:r}).label);
+  const initials=(S.me.name||S.me.username||'?').split(/\s+/).map(s=>s[0]).join('').slice(0,2).toUpperCase();
+  w.innerHTML='<div class="acct"><button type="button" id="acctBtn" aria-haspopup="true" aria-expanded="false"><span class="av"></span><div style="min-width:0;text-align:left"><div class="n"></div><div class="r">'+esc(rs.join(', ')||'No role')+'</div></div></button>'+
+    '<div class="menu" id="acctMenu" hidden><button type="button" id="acctPw">Change password</button><button type="button" id="acctOut">Sign out</button></div></div>';
+  w.querySelector('.av').textContent=initials; w.querySelector('.n').textContent=S.me.name||S.me.username;
+  const btn=$('#acctBtn'),menu=$('#acctMenu');
+  btn.addEventListener('click',ev=>{ ev.stopPropagation(); const open=menu.hidden; menu.hidden=!open; btn.setAttribute('aria-expanded',String(open)); });
+  $('#acctPw').addEventListener('click',()=>{ if(S.view==='form'&&!confirm('Leave this form?')) return; renderChangePassword(false); });
+  $('#acctOut').addEventListener('click',()=>{ if(S.view==='form'&&!confirm('Sign out and leave this form?')) return; logout(false); });
+}
+function renderTabs(){
+  const nav=$('#tabs');
+  if(!S.me||!S.loaded||S.view==='password'){ nav.innerHTML=''; return; }
+  const tabs=visibleTabs();
+  nav.innerHTML=tabs.map(t=>{
+    let badge=0;
+    if(t.id==='check') badge=S.entries.filter(e=>e.status==='submitted').length;
+    if(t.id==='permits') badge=S.entries.filter(e=>e.status==='pushed').length;
+    if(t.id==='zoning') badge=S.entries.filter(e=>e.status==='permit_issued').length;
+    if(t.id==='capture') badge=S.entries.filter(e=>e.createdBy===S.me.username&&e.status==='returned').length;
+    return '<button type="button" data-tab="'+t.id+'" class="'+(S.tab===t.id?'on':'')+'">'+t.icon+'<span>'+esc(t.label)+'</span>'+(badge?'<span class="b num">'+badge+'</span>':'')+'</button>';
+  }).join('');
+  nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    if(S.view==='form'&&!confirm('Leave this form? Unsaved details will be kept until you reload the page.')) return;
+    S.tab=b.getAttribute('data-tab'); S.view='list'; S.detailId=null; setHash(S.tab); renderTabs(); render(); window.scrollTo(0,0);
+  }));
+}
+
+/* ---------- render ---------- */
+function render(){
+  const m=$('#main');
+  if(!S.tab){ m.innerHTML='<div class="card"><h2>No role assigned</h2><p class="muted">Ask an administrator to give your account a role.</p></div>'; return; }
+  if(S.view==='detail'){ S.detailStamp=detailStamp(); m.innerHTML=viewDetail(); bindDetail(); }
+  else if(S.view==='form'){ m.innerHTML=viewForm(); bindForm(); }
+  else {
+    const v={capture:viewCapture,check:viewCheck,permits:viewPermits,zoning:viewZoning,board:viewBoard,admin:viewAdmin}[S.tab];
+    m.innerHTML=v?v():'';
+    bindList();
+    if(S.tab==='admin') bindAdmin();
+  }
+  loadImages();
+}
+function entryRow(e,opts){
+  opts=opts||{};
+  const loc=[e.area,e.sublocation].filter(Boolean).join(', ');
+  return '<div class="erow" role="button" tabindex="0" data-open="'+esc(e.id)+'">'+
+    '<div><div class="name">'+esc(e.farmerName||'Unnamed farmer')+'</div>'+
+    '<div class="meta">LR '+esc(e.plotLR||'—')+(e.cbc?' · CBC '+esc(e.cbc):'')+(loc?' · '+esc(loc):'')+'</div>'+
+    '<div class="meta small">'+(opts.showScout?'Scout '+who(e.createdBy)+' · ':'')+'Captured '+esc(fmtD(e.createdAt))+(e.acreage?' · '+esc(e.acreage)+' '+esc(S.config.acreageUnit):'')+'</div></div>'+
+    '<div class="right">'+chip(e)+(e.permit&&e.permit.number?'<span class="permit">Permit '+esc(e.permit.number)+'</span>':'')+rail(e,true)+'</div>'+
+    '</div>';
+}
+function listOf(items,opts,emptyText){
+  if(!items.length) return '<div class="empty">'+esc(emptyText)+'</div>';
+  return '<div class="list">'+items.map(e=>entryRow(e,opts)).join('')+'</div>';
+}
+function bindList(){
+  document.querySelectorAll('[data-open]').forEach(b=>{
+    const open=()=>{ S.detailId=b.getAttribute('data-open'); S.view='detail'; render(); window.scrollTo(0,0); };
+    b.addEventListener('click',open);
+    b.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); open(); } });
+  });
+  const nb=$('#newEntry'); if(nb) nb.addEventListener('click',()=>startForm(null));
+}
+function counts(list){
+  const c={total:list.length,submitted:0,returned:0,rejected:0,pushed:0,permit_issued:0,zoned:0,withPermit:0};
+  list.forEach(e=>{ if(c[e.status]!=null) c[e.status]++; if(e.permit&&e.permit.number) c.withPermit++; });
+  return c;
+}
+
+/* ---- scout ---- */
+function viewCapture(){
+  const mine=S.entries.filter(e=>e.createdBy===S.me.username);
+  const c=counts(mine);
+  const returned=mine.filter(e=>e.status==='returned');
+  return '<div class="row between" style="margin-bottom:12px"><div><h2>My entries</h2><p class="muted" style="margin:0">Everything you have captured, with where each one is in the permit process.</p></div>'+
+    '<button class="btn primary" id="newEntry"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New entry</button></div>'+
+    '<div class="stats">'+
+      '<div class="stat"><div class="v num">'+c.total+'</div><div class="l">Captured</div></div>'+
+      '<div class="stat"><div class="v num">'+c.submitted+'</div><div class="l">Awaiting check</div></div>'+
+      '<div class="stat"><div class="v num">'+c.returned+'</div><div class="l">Returned to me</div></div>'+
+      '<div class="stat"><div class="v num">'+c.pushed+'</div><div class="l">Pushed to ERP</div></div>'+
+      '<div class="stat hi"><div class="v num">'+c.withPermit+'</div><div class="l">With permit number</div></div>'+
+      '<div class="stat"><div class="v num">'+c.zoned+'</div><div class="l">Zoned</div></div>'+
+    '</div>'+
+    (returned.length?'<h3>Needs your correction</h3>'+listOf(returned,{},'')+'<hr class="hr">':'')+
+    '<h3>All my entries</h3>'+listOf(mine,{},'You have not captured any farmer yet. Tap “New entry” to start.');
+}
+/* ---- checker ---- */
+function viewCheck(){
+  const q=S.entries.filter(e=>e.status==='submitted');
+  const done=S.entries.filter(e=>['pushed','permit_issued','zoned','returned','rejected'].includes(e.status)).slice(0,30);
+  return '<h2>Data check</h2><p class="muted">Verify each submission against the ID photos, then push it to the ERP or return it to the scout.</p>'+
+    '<div class="stats"><div class="stat hi"><div class="v num">'+q.length+'</div><div class="l">Waiting for check</div></div>'+
+    '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='pushed').length+'</div><div class="l">Pushed, no permit yet</div></div>'+
+    '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='returned').length+'</div><div class="l">Returned to scouts</div></div></div>'+
+    '<h3>Queue</h3>'+listOf(q.slice().reverse(),{showScout:true},'Nothing waiting. New submissions from scouts will appear here.')+
+    '<hr class="hr"><h3>Recently handled</h3>'+listOf(done,{showScout:true},'No entries handled yet.');
+}
+/* ---- permits ---- */
+function viewPermits(){
+  const q=S.entries.filter(e=>e.status==='pushed');
+  const done=S.entries.filter(e=>e.permit&&e.permit.number).slice(0,30);
+  return '<h2>Permits</h2><p class="muted">These entries are in the ERP. Generate the permit there, then record its number here to close process one.</p>'+
+    '<div class="stats"><div class="stat hi"><div class="v num">'+q.length+'</div><div class="l">Ready for permit</div></div>'+
+    '<div class="stat"><div class="v num">'+done.length+'</div><div class="l">Permits issued</div></div>'+
+    '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='permit_issued').length+'</div><div class="l">Open (not yet zoned)</div></div></div>'+
+    '<h3>Ready for permit</h3>'+listOf(q.slice().reverse(),{showScout:true},'Nothing ready. Entries appear here once the data checker pushes them to the ERP.')+
+    '<hr class="hr"><h3>Recently issued</h3>'+listOf(done,{showScout:true},'No permits recorded yet.');
+}
+/* ---- zoning ---- */
+function viewZoning(){
+  const open=S.entries.filter(e=>e.status==='permit_issued');
+  const partial=open.filter(e=>e.zoning&&(e.zoning.inspected||e.zoning.polygonReceived||e.zoning.zone));
+  const done=S.entries.filter(e=>e.status==='zoned').slice(0,30);
+  return '<h2>Zoning</h2><p class="muted">Open permits waiting for field inspection, polygon receipt and zoning. Enter the zone, CBC and linear distance to close each one.</p>'+
+    '<div class="stats"><div class="stat hi"><div class="v num">'+open.length+'</div><div class="l">Open permits</div></div>'+
+    '<div class="stat"><div class="v num">'+partial.length+'</div><div class="l">In progress</div></div>'+
+    '<div class="stat"><div class="v num">'+done.length+'</div><div class="l">Zoned</div></div></div>'+
+    '<h3>Open permits</h3>'+listOf(open.slice().reverse(),{showScout:true},'No open permits. Entries appear here once a permit number is recorded.')+
+    '<hr class="hr"><h3>Recently zoned</h3>'+listOf(done,{showScout:true},'Nothing zoned yet.');
+}
+/* ---- board ---- */
+function boardItems(){
+  const f=S.boardFilter, q=S.boardQuery.trim().toLowerCase();
+  let items=S.entries;
+  if(f!=='all') items=items.filter(e=>e.status===f);
+  if(q) items=items.filter(e=>[e.farmerName,e.idNumber,e.plotLR,e.phone,e.cbc,e.permit&&e.permit.number,e.area,e.sublocation,S.names[e.createdBy]].some(v=>v&&String(v).toLowerCase().includes(q)));
+  return items;
+}
+function viewBoard(){
+  const c=counts(S.entries); const f=S.boardFilter;
+  const fb=(id,l)=>'<button type="button" class="btn sm'+(f===id?' on':'')+'" data-filter="'+id+'">'+l+'</button>';
+  return '<h2>All entries</h2><p class="muted">Every capture and where it stands. Search by farmer, ID, LR number, phone, permit number or scout.</p>'+
+    '<div class="stats"><div class="stat"><div class="v num">'+c.total+'</div><div class="l">Captured</div></div>'+
+    '<div class="stat"><div class="v num">'+c.submitted+'</div><div class="l">Awaiting check</div></div>'+
+    '<div class="stat"><div class="v num">'+c.pushed+'</div><div class="l">Pushed to ERP</div></div>'+
+    '<div class="stat"><div class="v num">'+c.withPermit+'</div><div class="l">With permit number</div></div>'+
+    '<div class="stat"><div class="v num">'+c.permit_issued+'</div><div class="l">Open permits</div></div>'+
+    '<div class="stat"><div class="v num">'+c.zoned+'</div><div class="l">Zoned</div></div></div>'+
+    '<div class="filters"><div class="search"><input id="boardQ" type="search" placeholder="Search farmer, ID, LR, phone, permit…" value="'+esc(S.boardQuery)+'"></div></div>'+
+    '<div class="filters">'+fb('all','All')+fb('submitted','Awaiting check')+fb('returned','Returned')+fb('pushed','Pushed')+fb('permit_issued','Open permits')+fb('zoned','Zoned')+fb('rejected','Rejected')+'</div>'+
+    listOf(boardItems(),{showScout:true},S.boardQuery||f!=='all'?'No entries match.':'No entries yet.');
+}
+
+/* ---- admin ---- */
+function viewAdmin(){
+  const cfg=S.config;
+  const users=S.users.slice().sort((a,b)=>(a.name||a.username).localeCompare(b.name||b.username));
+  const cred=S.newCred?'<div class="cred"><b>Share these sign-in details with '+esc(S.newCred.name)+':</b><br>Username <code>'+esc(S.newCred.username)+'</code> · Temporary password <code>'+esc(S.newCred.password)+'</code><br><span class="small">They will be asked to choose their own password at first sign in. This is the only time the password is shown.</span></div>':'';
+  return '<h2>Admin</h2><p class="muted">Manage who can sign in and what they can do, keep the reference lists current, and export the data.</p>'+
+    '<div class="card"><h3>Add a user</h3><p class="small muted">Create an account with a temporary password. The person is asked to change it the first time they sign in.</p>'+
+      '<form id="addUser"><div class="grid two">'+
+      '<div class="field"><label for="auName">Full name <span class="req">*</span></label><input id="auName" required></div>'+
+      '<div class="field"><label for="auUser">Username <span class="req">*</span></label><input id="auUser" required autocapitalize="none" spellcheck="false" placeholder="e.g. jotieno"><div class="hint">Letters, numbers, dots or dashes. Used to sign in.</div></div>'+
+      '<div class="field"><label for="auEmail">Email (optional)</label><input id="auEmail" type="email"></div>'+
+      '<div class="field"><label for="auPw">Temporary password <span class="req">*</span></label><div class="row" style="flex-wrap:nowrap"><input id="auPw" required minlength="6" autocomplete="off" style="flex:1"><button type="button" class="btn" id="auGen">Generate</button></div></div>'+
+      '</div><div class="field"><label>Roles <span class="req">*</span></label><div class="rolepick">'+ALL_ROLES.map(r=>'<label title="'+esc(ROLE_DEFS[r].desc)+'"><input type="checkbox" name="auRole" value="'+r+'">'+esc(ROLE_DEFS[r].label)+'</label>').join('')+'</div></div>'+
+      '<button class="btn primary" type="submit" id="auBtn">Add user</button></form>'+cred+'</div>'+
+    '<div class="card"><h3>Users</h3>'+
+      (users.length?'<table class="utable"><thead><tr><th>Name</th><th>Roles</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+users.map(u=>{
+        const me=u.username===S.me.username;
+        return '<tr data-user="'+esc(u.username)+'">'+
+          '<td data-l="Name"><b>'+esc(u.name||u.username)+'</b><div class="small muted">'+esc(u.username)+(u.email?' · '+esc(u.email):'')+'</div><div class="small faint">'+(u.lastLogin?'Last sign in '+esc(fmt(u.lastLogin)):'Never signed in')+'</div></td>'+
+          '<td data-l="Roles"><div class="rolepick">'+ALL_ROLES.map(r=>'<label><input type="checkbox" value="'+r+'"'+((u.roles||[]).includes(r)?' checked':'')+'>'+esc(ROLE_DEFS[r].label)+'</label>').join('')+'</div></td>'+
+          '<td data-l="Status">'+(u.active?'<span class="chip t-green">Active</span>':'<span class="chip t-grey">Deactivated</span>')+(u.mustChange?'<div class="small faint" style="margin-top:4px">Temporary password</div>':'')+'</td>'+
+          '<td data-l="Actions"><div class="ops"><button class="btn sm" data-saveroles="'+esc(u.username)+'">Save roles</button><button class="btn sm" data-resetpw="'+esc(u.username)+'">Set temporary password</button>'+(me?'':'<button class="btn sm '+(u.active?'danger':'')+'" data-toggle="'+esc(u.username)+'" data-active="'+(u.active?'0':'1')+'">'+(u.active?'Deactivate':'Reactivate')+'</button>')+'</div></td></tr>';
+      }).join('')+'</tbody></table>':'<div class="faint small">No users yet.</div>')+'</div>'+
+    '<div class="card"><h3>Reference lists</h3><p class="small muted">One item per line. The CBC list is the dropdown scouts and zoning choose from; the other lists are suggestions that can still be typed over.</p>'+
+      '<div class="grid two">'+
+      '<div class="field"><label>Cane buying centres (CBC)</label><textarea id="cfgCbcs" rows="6">'+esc((cfg.cbcs||[]).join('\n'))+'</textarea></div>'+
+      '<div class="field"><label>Zones</label><textarea id="cfgZones" rows="6">'+esc((cfg.zones||[]).join('\n'))+'</textarea></div>'+
+      '<div class="field"><label>Areas</label><textarea id="cfgAreas" rows="6">'+esc((cfg.areas||[]).join('\n'))+'</textarea></div>'+
+      '<div class="field"><label>Sublocations</label><textarea id="cfgSubs" rows="6">'+esc((cfg.sublocations||[]).join('\n'))+'</textarea></div>'+
+      '</div>'+
+      '<div class="field"><label>Acreage unit</label><select id="cfgUnit"><option value="acres"'+(cfg.acreageUnit==='acres'?' selected':'')+'>acres</option><option value="ha"'+(cfg.acreageUnit==='ha'?' selected':'')+'>hectares</option></select></div>'+
+      '<button class="btn primary" id="saveCfg">Save settings</button></div>'+
+    '<div class="card"><h3>Export</h3><p class="small muted">All entries as a CSV, one row per farmer. The same data is also in the Google Sheet behind this app.</p>'+
+      '<button class="btn" id="exportCsv">Download entries CSV</button><div class="small faint" style="margin-top:8px">'+S.entries.length+' entries</div></div>';
+}
+function genPassword(){ const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function bindAdmin(){
+  $('#auGen').addEventListener('click',()=>{ $('#auPw').value=genPassword(); });
+  $('#addUser').addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    const roles=[...document.querySelectorAll('input[name=auRole]:checked')].map(i=>i.value);
+    if(!roles.length){ toast('Choose at least one role.'); return; }
+    const name=$('#auName').value.trim(), username=$('#auUser').value.trim().toLowerCase(), email=$('#auEmail').value.trim(), pw=$('#auPw').value;
+    const btn=$('#auBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Adding…';
+    try{
+      const r=await api('users.add',{name:name,username:username,email:email,roles:roles,tempPassword:pw});
+      S.users=r.users; S.newCred={name:name,username:username,password:pw}; S.names[username]=name; toast('User added'); render();
+    }catch(e){ toast(errMsg(e)); btn.disabled=false; btn.textContent='Add user'; }
+  });
+  document.querySelectorAll('[data-saveroles]').forEach(b=>b.addEventListener('click',async()=>{
+    const u=b.getAttribute('data-saveroles'); const row=b.closest('tr');
+    const roles=[...row.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value);
+    try{ const r=await api('users.update',{username:u,roles:roles}); S.users=r.users; toast('Roles saved'); S.newCred=null; render(); }catch(e){ toast(errMsg(e)); }
+  }));
+  document.querySelectorAll('[data-resetpw]').forEach(b=>b.addEventListener('click',async()=>{
+    const u=b.getAttribute('data-resetpw'); const user=S.users.find(x=>x.username===u)||{name:u};
+    const pw=prompt('New temporary password for '+(user.name||u)+' (at least 6 characters):',genPassword()); if(pw==null) return;
+    try{ const r=await api('users.resetPassword',{username:u,tempPassword:pw}); S.users=r.users; S.newCred={name:user.name||u,username:u,password:pw}; toast('Temporary password set'); render(); }catch(e){ toast(errMsg(e)); }
+  }));
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',async()=>{
+    const u=b.getAttribute('data-toggle'); const active=b.getAttribute('data-active')==='1';
+    if(!active&&!confirm('Deactivate this user? They will no longer be able to sign in.')) return;
+    try{ const r=await api('users.update',{username:u,active:active}); S.users=r.users; toast(active?'User reactivated':'User deactivated'); S.newCred=null; render(); }catch(e){ toast(errMsg(e)); }
+  }));
+  $('#saveCfg').addEventListener('click',async()=>{
+    const lines=id=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean);
+    try{ const r=await api('config.set',{cbcs:lines('#cfgCbcs'),zones:lines('#cfgZones'),areas:lines('#cfgAreas'),sublocations:lines('#cfgSubs'),acreageUnit:$('#cfgUnit').value}); S.config=Object.assign({},DEFAULT_CONFIG,r.config); toast('Settings saved'); }
+    catch(e){ toast(errMsg(e)); }
+  });
+  $('#exportCsv').addEventListener('click',exportCsv);
+}
+function exportCsv(){
+  const cols=['id','status','farmerName','phone','idNumber','plotLR','acreage','trips','sublocation','area','cbc','pinLat','pinLng','pinAccuracy','createdAt','createdBy','scoutName','checkedAt','erpRef','permitNumber','permitAt','zone','zoneCbc','linearDistanceKm','inspected','polygonReceived','zonedAt','agreedTermsAt'];
+  const g=v=>{ v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const rows=[cols.join(',')];
+  S.entries.forEach(e=>{
+    const z=e.zoning||{},p=e.permit||{},c=e.check||{},pin=e.pin||{};
+    rows.push([e.id,e.status,e.farmerName,e.phone,e.idNumber,e.plotLR,e.acreage,e.trips,e.sublocation,e.area,e.cbc,pin.lat,pin.lng,pin.accuracy,e.createdAt,e.createdBy,S.names[e.createdBy]||'',c.at,c.erpRef,p.number,p.at,z.zone,z.cbc,z.linearDistance,z.inspected?'yes':'',z.polygonReceived?'yes':'',z.at,e.agreedAt].map(g).join(','));
+  });
+  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cane-permit-entries-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+
+/* ---------- images ---------- */
+function imgSrc(ref){ return ref?(S.imgCache[ref]||null):null; }
+let loadingImgs=false;
+async function loadImages(){
+  if(loadingImgs) return;
+  const imgs=[...document.querySelectorAll('img[data-ref]')].filter(i=>!i.getAttribute('src'));
+  const refs=[...new Set(imgs.map(i=>i.getAttribute('data-ref')).filter(r=>r&&!S.imgCache[r]))];
+  imgs.forEach(i=>{ const c=S.imgCache[i.getAttribute('data-ref')]; if(c) i.src=c; });
+  if(!refs.length) return;
+  loadingImgs=true;
+  try{
+    for(let i=0;i<refs.length;i+=4){
+      const batch=refs.slice(i,i+4);
+      const r=await api('getImages',{refs:batch});
+      batch.forEach(ref=>{ if(r.images[ref]) S.imgCache[ref]=r.images[ref]; });
+      document.querySelectorAll('img[data-ref]').forEach(img=>{ const ref=img.getAttribute('data-ref'); if(S.imgCache[ref]&&!img.getAttribute('src')) img.src=S.imgCache[ref]; else if(batch.includes(ref)&&!S.imgCache[ref]) img.alt='Image unavailable'; });
+    }
+  }catch(e){ /* leave placeholders */ }
+  finally{ loadingImgs=false; }
+}
+
+/* ---------- detail ---------- */
+function viewDetail(){
+  const e=S.entries.find(x=>x.id===S.detailId);
+  if(!e) return '<button class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back</button><div class="empty">This entry is no longer available.</div>';
+  const im=e.images||{}; const pin=e.pin||{};
+  const gal=[['idFront','ID front'],['idBack','ID back'],['farmerPhoto','Farmer'],['signature','Signature']].map(([k,l])=>{
+    const ref=im[k]; if(!ref) return '<figure><div style="aspect-ratio:4/3;display:grid;place-items:center" class="faint small">None</div><figcaption>'+l+'</figcaption></figure>';
+    const src=imgSrc(ref);
+    return '<figure><img alt="'+l+'" '+(src?'src="'+esc(src)+'"':'')+' data-ref="'+esc(ref)+'"><figcaption>'+l+'</figcaption></figure>';
+  }).join('');
+  const mapLink=(pin.lat!=null&&pin.lng!=null)?'<a href="https://www.google.com/maps?q='+encodeURIComponent(pin.lat+','+pin.lng)+'" target="_blank" rel="noopener">'+esc(Number(pin.lat).toFixed(5))+', '+esc(Number(pin.lng).toFixed(5))+'</a>'+(pin.accuracy?' <span class="faint small">(±'+Math.round(pin.accuracy)+' m)</span>':''):'<span class="faint">Not captured</span>';
+  const hist=(e.history||[]).slice().reverse().map(h=>'<li><span class="when">'+esc(fmt(h.at))+'</span><span>'+esc(h.action)+(h.by?' — '+who(h.by):'')+(h.note?'<div class="muted small">'+esc(h.note)+'</div>':'')+'</span></li>').join('');
+  return '<button class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back</button>'+
+    '<div class="row between" style="margin-bottom:8px"><h2 style="margin:0">'+esc(e.farmerName||'Unnamed farmer')+'</h2>'+chip(e)+'</div>'+
+    '<div class="card">'+rail(e,false)+
+      (e.permit&&e.permit.number?'<div class="note blue" style="margin-top:10px">Permit number <b>'+esc(e.permit.number)+'</b> · issued '+esc(fmt(e.permit.at))+' by '+who(e.permit.by)+'</div>':'')+
+      (e.status==='returned'&&e.check&&e.check.note?'<div class="note red" style="margin-top:10px">Returned: '+esc(e.check.note)+'</div>':'')+
+      (e.status==='rejected'&&e.check&&e.check.note?'<div class="note" style="margin-top:10px">Rejected: '+esc(e.check.note)+'</div>':'')+
+    '</div>'+
+    actionPanel(e)+
+    '<div class="card"><h3>Farmer and field</h3><dl class="kv">'+
+      '<dt>Phone</dt><dd>'+esc(e.phone||'—')+'</dd><dt>ID number</dt><dd>'+esc(e.idNumber||'—')+'</dd>'+
+      '<dt>Plot LR No</dt><dd>'+esc(e.plotLR||'—')+'</dd><dt>Estimated acreage</dt><dd>'+esc(e.acreage||'—')+' '+esc(S.config.acreageUnit)+'</dd>'+
+      '<dt>Number of trips</dt><dd>'+esc(e.trips===''||e.trips==null?'—':e.trips)+'</dd><dt>Sublocation</dt><dd>'+esc(e.sublocation||'—')+'</dd>'+
+      '<dt>Area</dt><dd>'+esc(e.area||'—')+'</dd><dt>Cane buying centre</dt><dd>'+esc(e.cbc||'—')+'</dd>'+
+      '<dt>Pin location</dt><dd>'+mapLink+'</dd>'+
+      '<dt>Terms</dt><dd>'+(e.agreedAt?'Agreed and signed '+esc(fmt(e.agreedAt)):'<span class="faint">Not recorded</span>')+'</dd>'+
+      '<dt>Captured by</dt><dd>'+who(e.createdBy)+' · '+esc(fmt(e.createdAt))+'</dd>'+
+    '</dl></div>'+
+    '<div class="card"><h3>Photos and signature</h3><div class="gallery">'+gal+'</div></div>'+
+    (e.check||e.zoning?'<div class="card"><h3>Processing</h3><dl class="kv">'+
+      (e.check?'<dt>Data check</dt><dd>'+esc(e.check.result||'')+' by '+who(e.check.by)+' · '+esc(fmt(e.check.at))+(e.check.erpRef?'<br>ERP reference: '+esc(e.check.erpRef):'')+(e.check.note?'<br><span class="muted">'+esc(e.check.note)+'</span>':'')+'</dd>':'')+
+      (e.zoning?'<dt>Zoning</dt><dd>'+(e.zoning.inspected?'Inspected · ':'Not yet inspected · ')+(e.zoning.polygonReceived?'Polygon received':'Polygon pending')+(e.zoning.zone?'<br>Zone '+esc(e.zoning.zone):'')+(e.zoning.cbc?' · CBC '+esc(e.zoning.cbc):'')+(e.zoning.linearDistance!==''&&e.zoning.linearDistance!=null?' · '+esc(e.zoning.linearDistance)+' km':'')+(e.zoning.note?'<br><span class="muted">'+esc(e.zoning.note)+'</span>':'')+(e.zoning.by?'<br><span class="faint small">Last updated by '+who(e.zoning.by)+' · '+esc(fmt(e.zoning.at))+'</span>':'')+'</dd>':'')+
+    '</dl></div>':'')+
+    '<div class="card"><h3>History</h3><ul class="hist">'+(hist||'<li><span class="faint">No history</span></li>')+'</ul></div>';
+}
+function actionPanel(e){
+  const mine=e.createdBy===S.me.username;
+  let h='';
+  if(((hasRole('scout')&&mine)||isAdmin())&&(e.status==='returned'||e.status==='submitted')){
+    h+='<div class="card"><h3>'+(e.status==='returned'?'Correct and resubmit':'Edit entry')+'</h3><p class="small muted">'+(e.status==='returned'?'Fix what the data checker flagged, then resubmit.':'You can still edit this entry until it has been checked.')+'</p><button class="btn primary" id="editEntry">'+(e.status==='returned'?'Correct entry':'Edit entry')+'</button></div>';
+  }
+  if(hasRole('checker')&&e.status==='submitted'){
+    h+='<div class="card"><h3>Data check</h3><p class="small muted">Compare the details against the ID photos and the signed undertaking. Then push to the ERP, return to the scout with a note, or reject.</p>'+
+      '<div class="field"><label>ERP reference (optional)</label><input id="erpRef" placeholder="e.g. farmer/contract code from the ERP"></div>'+
+      '<div class="field"><label>Note (required when returning or rejecting)</label><textarea id="checkNote" placeholder="What needs correcting?"></textarea></div>'+
+      '<div class="actions"><button class="btn primary" id="doPush">Mark pushed to ERP</button><button class="btn warn" id="doReturn">Return to scout</button><button class="btn danger" id="doReject">Reject</button></div></div>';
+  }
+  if(hasRole('permits')&&e.status==='pushed'){
+    h+='<div class="card"><h3>Issue permit</h3><p class="small muted">Generate the permit in the ERP, then enter its number here.</p>'+
+      '<div class="field"><label>Permit number <span class="req">*</span></label><input id="permitNo" placeholder="Permit number from the ERP" autocomplete="off"></div>'+
+      '<button class="btn primary" id="doPermit">Record permit number</button></div>';
+  }
+  if(hasRole('zoning')&&e.status==='permit_issued'){
+    const z=e.zoning||{};
+    h+='<div class="card"><h3>Inspection and zoning</h3><p class="small muted">Confirm the field was inspected and the polygon received, then assign the zone, CBC and linear distance.</p>'+
+      '<label class="check"><input type="checkbox" id="zInspected"'+(z.inspected?' checked':'')+'><span>Field inspected</span></label>'+
+      '<label class="check"><input type="checkbox" id="zPolygon"'+(z.polygonReceived?' checked':'')+'><span>Polygon received and mapped</span></label>'+
+      '<div class="grid three">'+
+      '<div class="field"><label>Zone <span class="req">*</span></label><input id="zZone" list="dlZones" value="'+esc(z.zone||'')+'" autocomplete="off"><datalist id="dlZones">'+(S.config.zones||[]).map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
+      '<div class="field"><label>CBC <span class="req">*</span></label>'+cbcSelect('zCbc',null,z.cbc||e.cbc||'',true)+'</div>'+
+      '<div class="field"><label>Linear distance (km) <span class="req">*</span></label><input id="zDist" type="number" step="0.01" min="0" inputmode="decimal" value="'+esc(z.linearDistance!=null?z.linearDistance:'')+'"></div>'+
+      '</div>'+
+      '<div class="field"><label>Note (optional)</label><textarea id="zNote">'+esc(z.note||'')+'</textarea></div>'+
+      '<div class="actions"><button class="btn" id="zSave">Save progress</button><button class="btn primary" id="zDone">Mark zoning complete</button></div></div>';
+  }
+  return h;
+}
+function bindDetail(){
+  $('#back').addEventListener('click',()=>{ S.view='list'; S.detailId=null; render(); });
+  const e=S.entries.find(x=>x.id===S.detailId); if(!e) return;
+  const on=(id,fn)=>{ const el=$(id); if(el) el.addEventListener('click',fn); };
+  on('#editEntry',()=>startForm(e));
+  on('#doPush',()=>checkAction(e,'pushed'));
+  on('#doReturn',()=>checkAction(e,'returned'));
+  on('#doReject',()=>checkAction(e,'rejected'));
+  on('#doPermit',()=>issuePermit(e));
+  on('#zSave',()=>zoneAction(e,false));
+  on('#zDone',()=>zoneAction(e,true));
+}
+async function guard(fn){ if(S.busy) return; S.busy=true; try{ await fn(); }catch(err){ toast('Could not save: '+errMsg(err)); } finally{ S.busy=false; } }
+function afterAction(r,msg){ mergeEntries([r.entry]); toast(msg); S.view='list'; S.detailId=null; render(); }
+function checkAction(e,result){
+  const note=($('#checkNote')||{}).value||'', erpRef=($('#erpRef')||{}).value||'';
+  if(result!=='pushed'&&!note.trim()){ toast('Add a note so the scout knows what to fix.'); $('#checkNote').focus(); return; }
+  const label={pushed:'Pushed to ERP',returned:'Returned to scout',rejected:'Rejected'}[result];
+  if(result==='rejected'&&!confirm('Reject this entry? The scout will see it as rejected.')) return;
+  guard(async()=>{ const r=await api('check',{id:e.id,result:result,note:note.trim(),erpRef:erpRef.trim()}); afterAction(r,label); });
+}
+function issuePermit(e){
+  const no=($('#permitNo').value||'').trim();
+  if(!no){ toast('Enter the permit number first.'); $('#permitNo').focus(); return; }
+  const dup=S.entries.find(x=>x.id!==e.id&&x.permit&&String(x.permit.number).toLowerCase()===no.toLowerCase());
+  if(dup&&!confirm('Permit '+no+' is already recorded for '+(dup.farmerName||'another farmer')+'. Record it here as well?')) return;
+  guard(async()=>{ const r=await api('permit',{id:e.id,number:no}); afterAction(r,'Permit '+no+' recorded'); });
+}
+function zoneAction(e,complete){
+  const z={ inspected:$('#zInspected').checked, polygonReceived:$('#zPolygon').checked, zone:$('#zZone').value.trim(), cbc:$('#zCbc').value.trim(), linearDistance:$('#zDist').value===''?'':Number($('#zDist').value), note:$('#zNote').value.trim() };
+  if(complete){
+    const missing=[]; if(!z.inspected) missing.push('field inspected'); if(!z.polygonReceived) missing.push('polygon received'); if(!z.zone) missing.push('zone'); if(!z.cbc) missing.push('CBC'); if(z.linearDistance===''||isNaN(z.linearDistance)) missing.push('linear distance');
+    if(missing.length){ toast('Still needed: '+missing.join(', ')); return; }
+  }
+  guard(async()=>{ const r=await api('zone',{id:e.id,zoning:z,complete:complete}); afterAction(r,complete?'Zoning complete':'Progress saved'); });
+}
+
+/* ---------- capture form ---------- */
+function startForm(e){
+  S.draft=e?{
+    id:e.id,existing:e,farmerName:e.farmerName||'',phone:e.phone||'',idNumber:e.idNumber||'',plotLR:e.plotLR||'',acreage:e.acreage||'',trips:e.trips==null?'':e.trips,
+    sublocation:e.sublocation||'',area:e.area||'',cbc:e.cbc||'',pin:e.pin?Object.assign({},e.pin):null,
+    images:{},existingImages:Object.assign({},e.images||{}),agreed:!!e.agreedAt,
+  }:{id:null,existing:null,farmerName:'',phone:'',idNumber:'',plotLR:'',acreage:'',trips:'',sublocation:'',area:'',cbc:'',pin:null,images:{},existingImages:{},agreed:false};
+  S.draft.errors={};
+  S.view='form'; render(); window.scrollTo(0,0);
+}
+const CAM_ICON='<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const ID_ICON='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M14 10h4M14 14h4"/></svg>';
+function photoTile(kind,label,capture,icon){
+  const d=S.draft; const err=d.errors[kind]?' err':'';
+  const fresh=d.images[kind], old=d.existingImages[kind];
+  const src=fresh?fresh.preview:(old?imgSrc(old):null);
+  const has=!!(fresh||old);
+  return '<div class="photo'+(has?' has':'')+err+'" data-kind="'+kind+'">'+
+    (has?'<img alt="'+esc(label)+'" '+(src?'src="'+esc(src)+'"':'')+(!fresh&&old?' data-ref="'+esc(old)+'"':'')+'>':icon+'<div class="t">'+esc(label)+'</div><div class="faint small">Tap to take photo</div>')+
+    '<input type="file" accept="image/*" '+(capture?'capture="'+capture+'"':'')+' aria-label="'+esc(label)+'">'+
+    (has?'<div class="cap"><span>'+esc(label)+'</span><button type="button" data-retake="'+kind+'">Retake</button></div>':'')+
+    '</div>';
+}
+function photosHtml(){ return photoTile('idFront','ID front','environment',ID_ICON)+photoTile('idBack','ID back','environment',ID_ICON)+photoTile('farmerPhoto','Farmer photo','user',CAM_ICON); }
+function viewForm(){
+  const d=S.draft; const cfg=S.config;
+  const f=(name,label,opts)=>{
+    opts=opts||{}; const err=d.errors[name];
+    const dl=opts.list?'<datalist id="dl_'+name+'">'+opts.list.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist>':'';
+    return '<div class="field'+(err?' err':'')+'"><label for="f_'+name+'">'+label+(opts.req!==false?' <span class="req">*</span>':'')+'</label>'+
+      '<input id="f_'+name+'" name="'+name+'" type="'+(opts.type||'text')+'" '+(opts.inputmode?'inputmode="'+opts.inputmode+'" ':'')+(opts.step?'step="'+opts.step+'" min="0" ':'')+(opts.list?'list="dl_'+name+'" ':'')+'value="'+esc(d[name])+'" autocomplete="off" placeholder="'+esc(opts.ph||'')+'">'+dl+
+      (opts.hint?'<div class="hint">'+opts.hint+'</div>':'')+(err?'<div class="errmsg">'+esc(err)+'</div>':'')+'</div>';
+  };
+  const pin=d.pin;
+  return '<button class="back" id="cancelForm"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>'+(d.id?'Back to entry':'Back to my entries')+'</button>'+
+    '<h2>'+(d.id?'Correct entry':'New farmer entry')+'</h2><p class="muted">Capture everything needed for the harvest permit while you are with the farmer.</p>'+
+    (d.existing&&d.existing.status==='returned'&&d.existing.check&&d.existing.check.note?'<div class="note red" style="margin-bottom:12px">Returned: '+esc(d.existing.check.note)+'</div>':'')+
+    '<form id="entryForm" novalidate>'+
+    '<div class="section"><span class="n">1</span><h3>Farmer</h3></div><div class="card">'+
+      f('farmerName','Farmer name',{ph:'As on the national ID'})+
+      '<div class="grid two">'+f('phone','Phone number',{type:'tel',inputmode:'tel',ph:'07…'})+f('idNumber','ID number',{inputmode:'numeric',ph:'National ID number'})+'</div>'+
+    '</div>'+
+    '<div class="section"><span class="n">2</span><h3>Field and location</h3></div><div class="card">'+
+      '<div class="grid two">'+f('plotLR','Plot LR No',{ph:'Land reference number'})+f('acreage','Estimated acreage ('+esc(cfg.acreageUnit)+')',{type:'number',inputmode:'decimal',step:'0.01'})+'</div>'+
+      '<div class="grid two">'+f('trips','Number of trips',{type:'number',inputmode:'numeric',step:'1',hint:'Estimated loads to the mill',req:false})+
+      '<div class="field'+(d.errors.cbc?' err':'')+'"><label for="f_cbc">Cane buying centre <span class="req">*</span></label>'+cbcSelect('f_cbc','cbc',d.cbc,true)+(d.errors.cbc?'<div class="errmsg">'+esc(d.errors.cbc)+'</div>':'')+'</div></div>'+
+      '<div class="grid two">'+f('area','Area',{list:cfg.areas||[]})+f('sublocation','Sublocation',{list:cfg.sublocations||[]})+'</div>'+
+      '<div class="field'+(d.errors.pin?' err':'')+'"><label>Pin location <span class="req">*</span></label>'+
+        '<div class="row"><button type="button" class="btn" id="gps"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>Use my GPS position</button>'+
+        '<span id="gpsMsg" class="small muted">'+(pin?'Captured '+Number(pin.lat).toFixed(5)+', '+Number(pin.lng).toFixed(5)+(pin.accuracy?' (±'+Math.round(pin.accuracy)+' m)':''):'Stand at the plot and tap the button')+'</span></div>'+
+        '<div class="grid two" style="margin-top:8px"><input id="f_lat" type="number" step="any" inputmode="decimal" placeholder="Latitude" value="'+(pin?esc(pin.lat):'')+'" aria-label="Latitude"><input id="f_lng" type="number" step="any" inputmode="decimal" placeholder="Longitude" value="'+(pin?esc(pin.lng):'')+'" aria-label="Longitude"></div>'+
+        (d.errors.pin?'<div class="errmsg">'+esc(d.errors.pin)+'</div>':'<div class="hint">Or type the coordinates if GPS is unavailable.</div>')+'</div>'+
+    '</div>'+
+    '<div class="section"><span class="n">3</span><h3>Photos</h3></div><div class="card"><div class="photos">'+photosHtml()+'</div>'+
+    (d.errors.photos?'<div class="errmsg" style="margin-top:8px">'+esc(d.errors.photos)+'</div>':'<div class="hint" style="margin-top:8px">Photos are resized before upload to save data.</div>')+'</div>'+
+    '<div class="section"><span class="n">4</span><h3>Terms and signature</h3></div><div class="card">'+
+      '<p class="small muted">Read this undertaking to the farmer. Their name and ID number fill in from above.</p>'+
+      '<div class="terms" id="termsBox">'+termsHtml()+'</div>'+
+      '<label class="check"><input type="checkbox" id="f_agreed"'+(d.agreed?' checked':'')+'><span>The farmer has heard and agrees to this undertaking and signs below.</span></label>'+
+      (d.errors.agreed?'<div class="errmsg">'+esc(d.errors.agreed)+'</div>':'')+
+      '<div class="field'+(d.errors.signature?' err':'')+'" style="margin-top:6px"><label>Farmer’s signature <span class="req">*</span></label>'+
+      (d.images.signature||d.existingImages.signature?
+        '<div class="sigwrap"><img class="sig" style="object-fit:contain;height:120px" alt="Signature" '+(d.images.signature?'src="'+esc(d.images.signature.preview)+'"':(imgSrc(d.existingImages.signature)?'src="'+esc(imgSrc(d.existingImages.signature))+'"':'')+' data-ref="'+esc(d.existingImages.signature)+'"')+'><button type="button" class="btn sm clr" id="sigRedo">Redo</button></div>':
+        '<div class="sigwrap"><canvas class="sig" id="sigPad"></canvas><span class="ghost">Sign here with a finger or stylus</span><button type="button" class="btn sm clr" id="sigClear">Clear</button></div>')+
+      (d.errors.signature?'<div class="errmsg">'+esc(d.errors.signature)+'</div>':'')+'</div>'+
+    '</div>'+
+    '<div class="submitbar"><button type="submit" class="btn primary block" id="submitBtn">'+(d.id?'Resubmit for data check':'Submit for data check')+'</button></div>'+
+    '</form>';
+}
+function termsHtml(){
+  const d=S.draft;
+  const n=d.farmerName.trim()||'……………………', i=d.idNumber.trim()||'………………';
+  return esc(TERMS).replace('{NAME}','<b>'+esc(n)+'</b>').replace('{ID}','<b>'+esc(i)+'</b>');
+}
+let sig=null;
+function bindForm(){
+  const d=S.draft; const form=$('#entryForm');
+  $('#cancelForm').addEventListener('click',()=>{ if(!confirm('Leave this form? The details you typed stay until you reload the page.')) return; S.view=d.id?'detail':'list'; render(); });
+  form.querySelectorAll('input[name],select[name]').forEach(inp=>{ const syncF=()=>{ d[inp.name]=inp.value; if(inp.name==='farmerName'||inp.name==='idNumber') $('#termsBox').innerHTML=termsHtml(); }; inp.addEventListener('input',syncF); inp.addEventListener('change',syncF); });
+  $('#f_agreed').addEventListener('change',ev=>{ d.agreed=ev.target.checked; });
+  const latEl=$('#f_lat'),lngEl=$('#f_lng');
+  const syncPin=()=>{ const la=parseFloat(latEl.value),ln=parseFloat(lngEl.value); d.pin=(isFinite(la)&&isFinite(ln))?{lat:la,lng:ln,accuracy:null,source:'manual'}:null; };
+  latEl.addEventListener('input',syncPin); lngEl.addEventListener('input',syncPin);
+  $('#gps').addEventListener('click',()=>{
+    const msg=$('#gpsMsg');
+    if(!navigator.geolocation){ msg.textContent='GPS is not available on this device. Type the coordinates instead.'; return; }
+    msg.innerHTML='<span class="spin"></span> Finding position…';
+    navigator.geolocation.getCurrentPosition(p=>{
+      d.pin={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,source:'gps',at:nowISO()};
+      latEl.value=p.coords.latitude.toFixed(6); lngEl.value=p.coords.longitude.toFixed(6);
+      msg.textContent='Captured '+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)+' (±'+Math.round(p.coords.accuracy)+' m)';
+    },err=>{ msg.textContent=(err.code===1?'Location permission was refused.':'Could not get a GPS fix.')+' Type the coordinates instead.'; },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  });
+  bindPhotos();
+  const redo=$('#sigRedo'); if(redo) redo.addEventListener('click',()=>{ delete d.images.signature; delete d.existingImages.signature; refreshSig(); });
+  setupSig();
+  form.addEventListener('submit',ev=>{ ev.preventDefault(); submitEntry(); });
+}
+function bindPhotos(){
+  const d=S.draft; const wrap=document.querySelector('.photos'); if(!wrap) return;
+  wrap.querySelectorAll('.photo input[type=file]').forEach(inp=>inp.addEventListener('change',async()=>{
+    const kind=inp.closest('.photo').getAttribute('data-kind'); const file=inp.files&&inp.files[0]; if(!file) return;
+    try{ const r=await compressImage(file,1000,0.75); d.images[kind]={blob:r.blob,preview:r.dataUrl}; delete d.errors[kind]; refreshPhotos(); }
+    catch(e){ toast('That image could not be read. Try again.'); }
+  }));
+  wrap.querySelectorAll('[data-retake]').forEach(b=>b.addEventListener('click',ev=>{ ev.preventDefault(); const k=b.getAttribute('data-retake'); delete d.images[k]; delete d.existingImages[k]; refreshPhotos(); }));
+}
+function refreshPhotos(){ const wrap=document.querySelector('.photos'); if(!wrap) return; wrap.innerHTML=photosHtml(); bindPhotos(); loadImages(); }
+function refreshSig(){
+  const wrap=document.querySelector('.sigwrap'); if(!wrap) return;
+  wrap.outerHTML='<div class="sigwrap"><canvas class="sig" id="sigPad"></canvas><span class="ghost">Sign here with a finger or stylus</span><button type="button" class="btn sm clr" id="sigClear">Clear</button></div>';
+  setupSig();
+}
+function setupSig(){
+  const c=$('#sigPad'); if(!c){ sig=null; return; }
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const w=c.clientWidth||320,h=c.clientHeight||170;
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
+  const ctx=c.getContext('2d'); ctx.scale(dpr,dpr); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+  ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#14233a';
+  sig={c:c,ctx:ctx,drawn:false,down:false};
+  const pos=ev=>{ const r=c.getBoundingClientRect(); return {x:ev.clientX-r.left,y:ev.clientY-r.top}; };
+  c.addEventListener('pointerdown',ev=>{ ev.preventDefault(); c.setPointerCapture(ev.pointerId); sig.down=true; const p=pos(ev); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+0.1,p.y+0.1); ctx.stroke(); sig.drawn=true; const g=document.querySelector('.sigwrap .ghost'); if(g) g.style.display='none'; });
+  c.addEventListener('pointermove',ev=>{ if(!sig.down) return; ev.preventDefault(); const p=pos(ev); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+  const up=()=>{ if(!sig.down) return; sig.down=false; ctx.closePath(); captureSig(); };
+  c.addEventListener('pointerup',up); c.addEventListener('pointercancel',up); c.addEventListener('pointerleave',up);
+  const clr=$('#sigClear'); if(clr) clr.addEventListener('click',()=>{ ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); sig.drawn=false; delete S.draft.images.signature; const g=document.querySelector('.sigwrap .ghost'); if(g) g.style.display=''; });
+}
+function captureSig(){
+  if(!sig||!sig.drawn) return;
+  const dataUrl=sig.c.toDataURL('image/png');
+  S.draft.images.signature={preview:dataUrl,dataUrl:dataUrl,type:'image/png'}; delete S.draft.errors.signature;
+}
+function compressImage(file,maxDim,q){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{
+      let w=img.naturalWidth,h=img.naturalHeight; const s=Math.min(1,maxDim/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
+      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      const dataUrl=c.toDataURL('image/jpeg',q);
+      res({dataUrl:dataUrl,type:'image/jpeg'});
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('decode failed')); };
+    img.src=url;
+  });
+}
+function validate(d){
+  const er={};
+  if(!d.farmerName.trim()) er.farmerName='Enter the farmer’s name.';
+  if(!d.phone.trim()) er.phone='Enter a phone number.';
+  if(!d.idNumber.trim()) er.idNumber='Enter the ID number.';
+  if(!d.plotLR.trim()) er.plotLR='Enter the plot LR number.';
+  if(d.acreage===''||isNaN(Number(d.acreage))||Number(d.acreage)<=0) er.acreage='Enter the estimated acreage.';
+  if(!d.cbc.trim()) er.cbc='Select the cane buying centre.';
+  if(!d.area.trim()) er.area='Enter the area.';
+  if(!d.sublocation.trim()) er.sublocation='Enter the sublocation.';
+  if(!d.pin) er.pin='Capture the GPS position or type the coordinates.';
+  const missing=['idFront','idBack','farmerPhoto'].filter(k=>!(d.images[k]||d.existingImages[k]));
+  if(missing.length){ er.photos='Add: '+missing.map(k=>({idFront:'ID front',idBack:'ID back',farmerPhoto:'farmer photo'})[k]).join(', ')+'.'; missing.forEach(k=>er[k]=true); }
+  if(!d.agreed) er.agreed='Tick to confirm the farmer agrees to the undertaking.';
+  if(!(d.images.signature||d.existingImages.signature)) er.signature='Ask the farmer to sign.';
+  return er;
+}
+function b64(dataUrl){ return dataUrl.slice(dataUrl.indexOf(',')+1); }
+async function submitEntry(){
+  const d=S.draft; if(S.busy) return;
+  if(sig&&sig.drawn&&!d.images.signature) captureSig();
+  d.errors=validate(d);
+  if(Object.keys(d.errors).length){ render(); const first=document.querySelector('.err,.photo.err'); if(first) first.scrollIntoView({behavior:'smooth',block:'center'}); toast('Some details are missing.'); return; }
+  S.busy=true; const btn=$('#submitBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Uploading…';
+  try{
+    const images={};
+    ['idFront','idBack','farmerPhoto','signature'].forEach(k=>{
+      if(d.images[k]) images[k]={data:b64(d.images[k].dataUrl||d.images[k].preview),type:d.images[k].type||'image/jpeg'};
+      else if(d.existingImages[k]) images[k]=d.existingImages[k];
+    });
+    const r=await api('save',{entry:{
+      id:d.id||null,farmerName:d.farmerName,phone:d.phone,idNumber:d.idNumber,plotLR:d.plotLR,acreage:d.acreage,trips:d.trips,
+      sublocation:d.sublocation,area:d.area,cbc:d.cbc,pin:d.pin,images:images,
+    }});
+    mergeEntries([r.entry]);
+    toast(d.id?'Resubmitted for data check':'Submitted for data check');
+    S.draft=null; S.view='list'; S.detailId=null; sig=null;
+    render(); window.scrollTo(0,0);
+  }catch(e){
+    toast('Could not submit: '+errMsg(e)); btn.disabled=false; btn.textContent=d.id?'Resubmit for data check':'Submit for data check';
+  }finally{ S.busy=false; }
+}
+
+document.addEventListener('click',()=>{ const m=$('#acctMenu'),b=$('#acctBtn'); if(m){ m.hidden=true; } if(b) b.setAttribute('aria-expanded','false'); });
+/* board filters survive re-render via delegated handlers */
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-filter]'); if(!b) return;
+  S.boardFilter=b.getAttribute('data-filter'); render();
+});
+document.addEventListener('input',ev=>{
+  if(ev.target.id!=='boardQ') return;
+  S.boardQuery=ev.target.value;
+  const list=document.querySelector('#main .list, #main .empty'); if(!list) return;
+  list.outerHTML=listOf(boardItems(),{showScout:true},'No entries match.'); bindList();
+});
+
+boot();
+})();
+
+</script>
+</body>
+</html>
