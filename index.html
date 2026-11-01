@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1B2A1E">
 <title>Cane Permit Tracker</title>
+<meta name="description" content="Angata Sugar Mills — field capture to harvest permit and zoning">
+<meta name="theme-color" content="#1B2A1E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin=""></script>
 <style>
 :root{
   box-sizing:border-box;
@@ -323,30 +326,82 @@ table.tbl th{color:var(--ink-2);font-weight:500;font-size:13px}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
 .hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
-/* login & account */
-.login{max-width:420px;margin:40px auto 0}
-.login .mark{width:44px;height:44px;border-radius:10px;background:var(--cane);display:grid;place-items:center;margin-bottom:14px}
+/* ===== v2 additions ===== */
+.top .who{cursor:pointer;background:none;border:0;color:inherit;padding:4px 6px;border-radius:8px;text-align:left}
+.top .who:hover{background:rgba(255,255,255,.08)}
+.top .who .av{width:30px;height:30px;border-radius:50%;background:var(--cane);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:600;flex:none}
+.acct{position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:30;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);min-width:220px;padding:6px}
+.acct button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 12px;border-radius:7px;color:var(--ink);font-size:14px}
+.acct button:hover{background:var(--card-2)}
+.acct .hd{padding:8px 12px 6px;font-size:12px;color:var(--ink-3);border-bottom:1px solid var(--line);margin-bottom:4px}
+.acct .hd b{display:block;color:var(--ink);font-size:14px;font-weight:600}
+
+.login{max-width:420px;margin:28px auto}
+.login .card{padding:22px}
+.login h2{margin-bottom:4px}
+.login .mark{width:44px;height:44px;border-radius:11px;background:var(--cane);display:grid;place-items:center;margin-bottom:14px}
 .login .mark svg{width:26px;height:26px}
-.acct{position:relative}
-.acct .menu{position:absolute;right:0;top:40px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:190px;z-index:11;color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.acct .menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 10px;border-radius:7px;color:var(--ink);font-size:14px}
-.acct .menu button:hover{background:var(--card-2)}
-.acct > button{background:none;border:0;color:var(--header-ink);display:flex;align-items:center;gap:8px;padding:4px;border-radius:8px}
-.acct > button .av{width:28px;height:28px;border-radius:50%;background:var(--cane);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
-.cred{background:var(--cane-soft);border:1px solid var(--cane);border-radius:8px;padding:12px 14px;margin-top:12px;font-size:14px}
-.cred code{font-family:inherit;font-weight:600;font-size:15px;background:var(--card);padding:1px 6px;border-radius:4px}
-.utable{width:100%;border-collapse:collapse;font-size:14px}
-.utable th,.utable td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-.utable th{color:var(--ink-2);font-weight:500;font-size:13px}
-.utable .rolepick label{font-size:13px}
-.utable .ops{display:flex;gap:6px;flex-wrap:wrap}
-@media (max-width:720px){
-  .utable thead{display:none}
-  .utable tr{display:block;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:10px;background:var(--card-2)}
-  .utable td{display:block;border:0;padding:4px 0}
-  .utable td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--ink-3)}
-}
-.offline{background:var(--red-soft);color:var(--red)}
+.login .foot{text-align:center;font-size:12.5px;color:var(--ink-3);margin-top:16px}
+.pw{position:relative}
+.pw input{padding-right:64px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--cane);font-size:13px;font-weight:500;padding:6px 8px}
+.setupnote{max-width:640px;margin:28px auto}
+code.k{background:var(--card-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+
+/* map */
+.map{height:340px;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--card-2);position:relative;z-index:0}
+@media (min-width:860px){.map{height:420px}}
+.map.err{border-color:var(--red)}
+.map.ro{height:260px}
+.mapbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.mapbar .btn.on{background:var(--cane);border-color:var(--cane);color:var(--cane-ink)}
+.maphint{font-size:12.5px;color:var(--ink-2);margin:4px 0 8px}
+.leaflet-container{font:inherit}
+.vtx{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #2E7D4F;box-shadow:0 1px 4px rgba(0,0,0,.4);margin:-8px 0 0 -8px}
+.vtx.first{border-color:#B8701A}
+.cbcpin{background:#1F6F78;color:#fff;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);transform:translate(-50%,-50%)}
+.cbcpin.near{background:#B8701A}
+.leaflet-control-attribution{font-size:9px}
+.sum{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+@media (min-width:640px){.sum{grid-template-columns:repeat(4,1fr)}}
+.sum .s{background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.sum .s .v{font-size:17px;font-weight:600}
+.sum .s .l{font-size:11.5px;color:var(--ink-3)}
+.zone{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:7px;background:var(--teal);color:#fff;font-weight:700;font-size:15px;padding:0 8px}
+.zone.out{background:var(--red)}
+.stat.hi{border-color:var(--cane)}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .v{font-size:22px;font-weight:600;line-height:1.1}
+.stat .l{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* admin */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.subtabs button{background:none;border:1px solid transparent;border-radius:8px;padding:7px 12px;color:var(--ink-2);font-weight:500}
+.subtabs button.on{background:var(--card);border-color:var(--line-strong);color:var(--ink)}
+.tblwrap{overflow-x:auto;max-width:100%}
+table.tbl input,table.tbl select{background:var(--card);border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;min-height:34px;width:100%;font-size:13.5px}
+table.tbl td.n{width:1%;white-space:nowrap}
+.inactive td{color:var(--ink-3)}
+.tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11.5px;background:var(--grey-soft);color:var(--ink-2)}
+.tag.on{background:var(--cane-soft);color:var(--cane)}
+.tag.off{background:var(--red-soft);color:var(--red)}
+.cred{background:var(--amber-soft);border:1px solid var(--amber);border-radius:8px;padding:12px 14px;font-size:14px;margin-top:10px}
+.cred code{font-size:15px;font-weight:600}
+
+/* dialog */
+dialog.dlg{border:0;border-radius:12px;padding:0;max-width:640px;width:calc(100% - 32px);background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog.dlg::backdrop{background:rgba(0,0,0,.45)}
+dialog.dlg .dh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+dialog.dlg .db{padding:16px 18px;max-height:70vh;overflow:auto;font-size:14.5px;line-height:1.6}
+dialog.dlg .db p{margin-bottom:12px}
+.consent{background:var(--teal-soft);border:1px solid var(--teal);border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.55;max-height:200px;overflow:auto;color:var(--ink)}
+.consent h4{margin:0 0 6px;font-size:14px;color:var(--teal)}
+.bankcode{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;border:1px dashed var(--line-strong);border-radius:8px;background:var(--card-2);color:var(--ink-2)}
+.bankcode b{color:var(--ink);font-size:16px}
+.readonly{background:var(--card-2)!important;color:var(--ink-2)}
+.flag{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);border-radius:8px;padding:4px 10px;font-size:13px}
+.ok{color:var(--cane)}
+.srv{font-size:12px;color:var(--ink-3);text-align:center;padding:16px 0 4px}
 </style>
 </head>
 <body>
@@ -358,7 +413,7 @@ table.tbl th{color:var(--ink-2);font-weight:500;font-size:13px}
       <span class="sub">Field capture to permit and zoning</span>
     </div>
   </div>
-  <div class="who" id="who"></div>
+  <button type="button" class="who" id="who" aria-haspopup="menu" hidden></button>
 </div>
 <div id="banner"></div>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
@@ -368,20 +423,23 @@ table.tbl th{color:var(--ink-2);font-weight:500;font-size:13px}
 (function(){
 'use strict';
 
-/* ======== SETTINGS — paste your Apps Script Web app URL here ======== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyVN327xRLKHMi-ncPwaowB6fbQ24219aT5NroyNxENIB9vzDTEE7eC2bQbUNSQYEU_/exec';
-const POLL_MS = 45000;
-/* ==================================================================== */
+/* =========================================================
+   Cane Permit Tracker v2 — front end
+   Backend: Google Apps Script web app (see Code.gs).
+   Paste the web app URL (ends in /exec) below.
+   ========================================================= */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzbqTIH_iEWZeqyYvFGKTVr7rxKBSbn1DSZekcuDMb-c6VFtQg7ECU2DYUkyMOkMNlU/exec';
+const APP_VERSION = '2.0';
 
 /* ---------- constants ---------- */
 const ROLE_DEFS = {
-  admin:   {label:'Administrator', desc:'Manages users, settings and can act in every role'},
-  scout:   {label:'Field scout',   desc:'Captures farmer and field details in the field'},
-  checker: {label:'Data checker',  desc:'Verifies submissions and pushes them to the ERP'},
-  permits: {label:'Permit officer',desc:'Generates the permit in the ERP and records its number'},
-  zoning:  {label:'Zoning (GIS)',  desc:'Confirms inspection and polygons, assigns zone, CBC and linear distance'},
+  scout:   {label:'Field scout',    desc:'Captures farmer, field polygon, bank details and consent in the field'},
+  checker: {label:'Data checker',   desc:'Verifies submissions and pushes them to the ERP'},
+  permits: {label:'Permit officer', desc:'Opens the permit in the ERP, records its number and CCS clips'},
+  zoning:  {label:'Zoning (GIS)',   desc:'Quality-checks the polygon and confirms zone, CBC and linear distance'},
+  admin:   {label:'Administrator',  desc:'Manages users, harvesters, CBCs, banks and settings'},
 };
-const ALL_ROLES = Object.keys(ROLE_DEFS);
+const ALL_ROLES = ['scout','checker','permits','zoning'];
 const STATUS = {
   submitted:    {label:'Awaiting data check',     tone:'amber', step:1},
   returned:     {label:'Returned for correction', tone:'red',   step:1},
@@ -391,207 +449,217 @@ const STATUS = {
   zoned:        {label:'Zoned',                   tone:'green', step:4},
 };
 const STEPS = ['Captured','Pushed to ERP','Permit issued','Zoned'];
+const ICON = {
+  home:'<svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V9l6-5 6 5v11"/><path d="M10 20v-6h4v6"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>',
+  permit:'<svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 18h6"/></svg>',
+  zone:'<svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>',
+  list:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  cog:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  id:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M14 10h4M14 14h4"/></svg>',
+  card:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>',
+  back:'<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+  gps:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>',
+};
 const TABS = [
-  {id:'capture', label:'My entries',  roles:['scout'],   icon:'<svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V9l6-5 6 5v11"/><path d="M10 20v-6h4v6"/></svg>'},
-  {id:'check',   label:'Data check',  roles:['checker'], icon:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>'},
-  {id:'permits', label:'Permits',     roles:['permits'], icon:'<svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 18h6"/></svg>'},
-  {id:'zoning',  label:'Zoning',      roles:['zoning'],  icon:'<svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></svg>'},
-  {id:'board',   label:'All entries', roles:['*'],       icon:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>'},
-  {id:'admin',   label:'Admin',       roles:['admin'],   icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'},
+  {id:'capture', label:'My entries',  roles:['scout'],   icon:ICON.home},
+  {id:'check',   label:'Data check',  roles:['checker'], icon:ICON.check},
+  {id:'permits', label:'Permits',     roles:['permits'], icon:ICON.permit},
+  {id:'zoning',  label:'Zoning',      roles:['zoning'],  icon:ICON.zone},
+  {id:'board',   label:'All entries', roles:['*'],       icon:ICON.list},
+  {id:'admin',   label:'Admin',       roles:['admin'],   icon:ICON.cog},
 ];
-const DEFAULT_CONFIG = {cbcs:[],zones:[],areas:[],sublocations:[],acreageUnit:'acres'};
-const TERMS = 'I, {NAME} of ID no. {ID} hereby give an undertaking and warrant that the land which I intend to contract with the Miller for cane farming is free from any encumbrances, third party claims, rights or interests and or dispute(s) prejudicial to the Miller. I confirm that I have not contracted the said piece of land/sugarcane with any other Miller. I am aware that the Miller’s decision to enter into contract with me shall be based on my representations herein and that I shall indemnify the Miller for any loss and/or damage it may sustain by acting on my representations.';
-const SESSION_KEY='cpt.session';
+const DEFAULT_TERMS = 'I, {NAME} of ID no. {ID} hereby give an undertaking and warrant that the land which I intend to contract with the Miller for cane farming is free from any encumbrances, third party claims, rights or interests and or dispute(s) prejudicial to the Miller. I confirm that I have not contracted the said piece of land/sugarcane with any other Miller. I am aware that the Miller’s decision to enter into contract with me shall be based on my representations herein and that I shall indemnify the Miller for any loss and/or damage it may sustain by acting on my representations.';
+const DEFAULT_PRIVACY = 'This application is committed to protecting your personal data in accordance with the Data Protection Act, 2019, Kenya’s primary statute on data protection, which gives effect to Article 31(c) and (d) of the Constitution of Kenya, 2010, guaranteeing every person’s right to privacy. Section 25 of the Act requires that personal data collected through this app is processed lawfully, fairly, and transparently, for specified and legitimate purposes, and kept accurate and up to date. We collect only the data necessary to deliver the app’s functionality, and we do not retain it longer than is reasonably required. Where applicable, we provide a privacy notice at or before the point of data collection, clearly stating the purpose of processing, the categories of data collected, retention periods, your rights as a data subject, and details of any cross-border transfers. Any processing of sensitive personal data generally requires your explicit consent. As required by the Act, we maintain appropriate technical and organizational safeguards to secure your data, and we are subject to oversight by the Office of the Data Protection Commissioner (ODPC), which enforces compliance, including a requirement to notify affected parties of any data breach within 72 hours. You retain the right to access, correct, delete, or restrict the processing of your personal data at any time, and may lodge a complaint with the ODPC if you believe your data has been mishandled.';
+const DEFAULT_CONFIG = {
+  zones:['A','B','C','D','E','F'], zoneIntervalKm:3, acreageUnit:'acres',
+  areas:[], sublocations:[], termsText:DEFAULT_TERMS, termsVersion:'1', privacyText:DEFAULT_PRIVACY, privacyVersion:'1',
+  bankAcctExactLength:true, requireBankCard:true, requireHarvester:true,
+};
+const IMG_KINDS = [['idFront','ID front'],['idBack','ID back'],['farmerPhoto','Farmer photo'],['bankCard','Bank card'],['signature','Signature']];
 
 /* ---------- state ---------- */
 const S = {
-  token:null,me:null,
-  entries:[],since:'',names:{},users:[],config:Object.assign({},DEFAULT_CONFIG),
-  loaded:false,syncing:false,lastSync:0,offline:false,
-  tab:null,view:'list',detailId:null,detailStamp:null,draft:null,
-  imgCache:{},boardFilter:'all',boardQuery:'',busy:false,newCred:null,
+  token:null,me:null,config:null,cbcs:[],harvesters:[],banks:[],users:[],entries:[],
+  loaded:false,view:'list',tab:null,detailId:null,draft:null,
+  imgCache:{},boardFilter:'all',boardQuery:'',adminTab:'users',busy:false,
+  lastSync:null,pollT:null,serverOffset:0,
 };
 
 /* ---------- helpers ---------- */
 const $ = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
 const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nowISO = ()=>new Date().toISOString();
 function fmt(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
 function fmtD(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function n2(x,dp){ if(x==null||x===''||isNaN(Number(x))) return '—'; return Number(x).toFixed(dp==null?2:dp); }
 let toastT=null;
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
 function errMsg(e){ return (e&&e.message)?e.message:String(e); }
-function myRoles(){ return (S.me&&S.me.roles)||[]; }
-const isAdmin = ()=>myRoles().includes('admin');
-const hasRole = x=>isAdmin()||myRoles().includes(x);
+function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
+function initials(name){ return String(name||'?').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase()||'?'; }
+function myRoles(){ if(!S.me) return []; const r=Array.isArray(S.me.roles)?S.me.roles:[]; return r.includes('admin')?['admin'].concat(ALL_ROLES):r.filter(x=>ALL_ROLES.includes(x)); }
+const hasRole = x=>myRoles().includes(x);
+const isAdmin = ()=>hasRole('admin');
 function visibleTabs(){ return TABS.filter(t=>t.roles.includes('*')||t.roles.some(r=>hasRole(r))); }
 function statusOf(e){ return STATUS[e.status]||{label:e.status||'Unknown',tone:'grey',step:0}; }
 function chip(e){ const s=statusOf(e); return '<span class="chip t-'+s.tone+'">'+esc(s.label)+'</span>'; }
 function rail(e,mini){
   const st=statusOf(e); const step=st.step; const halt=(e.status==='returned'||e.status==='rejected');
   let h='<div class="rail'+(mini?' mini':'')+'" aria-label="'+esc(st.label)+'">';
-  STEPS.forEach((lbl,i)=>{
-    const n=i+1; let cls='stop';
-    if(n<=step) cls+=(halt&&n===step)?' halt':' done';
-    else if(n===step+1) cls+=' cur';
-    h+='<div class="'+cls+'"><div class="dot"></div><div class="lbl">'+esc(lbl)+'</div></div>';
-  });
+  STEPS.forEach((lbl,i)=>{ const n=i+1; let cls='stop'; if(n<=step) cls+=(halt&&n===step)?' halt':' done'; else if(n===step+1) cls+=' cur'; h+='<div class="'+cls+'"><div class="dot"></div><div class="lbl">'+esc(lbl)+'</div></div>'; });
   return h+'</div>';
 }
-function who(u){ return u?esc(S.names[u]||u):'<span class="faint">—</span>'; }
+function userName(u){ if(!u) return '—'; const x=S.users.find(y=>y.username===u); return x?x.name:u; }
+function who(u){ return u?esc(userName(u)):'<span class="faint">—</span>'; }
+function cfg(){ return S.config||DEFAULT_CONFIG; }
+function activeCbcs(){ return S.cbcs.filter(c=>c.active!==false); }
+function activeHarvesters(){ return S.harvesters.filter(h=>h.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))); }
+function activeBanks(){ return S.banks.filter(b=>b.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))); }
+function counts(list){
+  const c={total:list.length,submitted:0,returned:0,rejected:0,pushed:0,permit_issued:0,zoned:0,withPermit:0};
+  list.forEach(e=>{ if(c[e.status]!=null) c[e.status]++; if(e.permit&&e.permit.number) c.withPermit++; });
+  return c;
+}
 function setHash(t){ try{ if(location.hash!=='#'+t) history.replaceState(null,'','#'+t); }catch(e){} }
-function saveSession(){ try{ localStorage.setItem(SESSION_KEY,JSON.stringify({token:S.token,me:S.me})); }catch(e){} }
-function loadSession(){ try{ const j=JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); if(j&&j.token&&j.me){ S.token=j.token; S.me=j.me; } }catch(e){} }
-function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
-function cbcSelect(id,name,current,required){
-  const list=(S.config.cbcs||[]).slice();
-  if(current&&!list.includes(current)) list.unshift(current);
-  if(!list.length) return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+' disabled><option value="">No CBCs set up yet</option></select><div class="hint">Ask an administrator to add the cane buying centres under Admin, Reference lists.</div>';
-  return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+(required?' required':'')+'><option value=""'+(current?'':' selected')+'>Select a CBC</option>'+list.map(x=>'<option value="'+esc(x)+'"'+(x===current?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>';
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+
+/* ---------- geo ---------- */
+const R_EARTH=6378137;
+const rad=d=>d*Math.PI/180;
+function haversineKm(a,b){ const dLat=rad(b[0]-a[0]),dLng=rad(b[1]-a[1]); const s=Math.sin(dLat/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLng/2)**2; return 2*6371.0088*Math.asin(Math.sqrt(s)); }
+function geoAreaM2(pts){ // spherical excess approximation, pts = [[lat,lng],...]
+  const n=pts.length; if(n<3) return 0; let a=0;
+  for(let i=0;i<n;i++){ const p=pts[i],q=pts[(i+1)%n]; a+=(rad(q[1])-rad(p[1]))*(2+Math.sin(rad(p[0]))+Math.sin(rad(q[0]))); }
+  return Math.abs(a*R_EARTH*R_EARTH/2);
+}
+function centroid(pts){
+  const n=pts.length; if(!n) return null; if(n<3){ return [pts.reduce((s,p)=>s+p[0],0)/n,pts.reduce((s,p)=>s+p[1],0)/n]; }
+  let A=0,cx=0,cy=0; // planar shoelace in lat/lng (fields are small)
+  for(let i=0;i<n;i++){ const p=pts[i],q=pts[(i+1)%n]; const f=p[1]*q[0]-q[1]*p[0]; A+=f; cx+=(p[1]+q[1])*f; cy+=(p[0]+q[0])*f; }
+  if(Math.abs(A)<1e-12) return [pts.reduce((s,p)=>s+p[0],0)/n,pts.reduce((s,p)=>s+p[1],0)/n];
+  A*=0.5; return [cy/(6*A),cx/(6*A)];
+}
+function zoneFor(km){
+  const c=cfg(); const letters=(c.zones&&c.zones.length)?c.zones:DEFAULT_CONFIG.zones; const step=Number(c.zoneIntervalKm)||3;
+  if(km==null||isNaN(km)) return {zone:'',out:false,maxKm:letters.length*step};
+  const idx=Math.max(0,Math.ceil(km/step)-1);
+  if(idx>=letters.length) return {zone:'Beyond '+letters[letters.length-1],out:true,maxKm:letters.length*step};
+  return {zone:letters[idx],out:false,maxKm:letters.length*step,from:idx*step,to:(idx+1)*step};
+}
+function computeGeo(pts){
+  const r={areaM2:0,acres:0,ha:0,centroid:null,nearestCbc:'',nearestKm:null,zone:'',zoneOut:false};
+  if(!pts||pts.length<3) return r;
+  r.areaM2=geoAreaM2(pts); r.ha=r.areaM2/10000; r.acres=r.areaM2/4046.8564224; r.centroid=centroid(pts);
+  let best=null;
+  activeCbcs().forEach(c=>{ if(c.lat==null||c.lng==null) return; const km=haversineKm(r.centroid,[Number(c.lat),Number(c.lng)]); if(best==null||km<best.km) best={name:c.name,km:km}; });
+  if(best){ r.nearestCbc=best.name; r.nearestKm=Math.round(best.km*100)/100; const z=zoneFor(best.km); r.zone=z.zone; r.zoneOut=z.out; }
+  return r;
+}
+function acreageText(e){
+  const u=cfg().acreageUnit;
+  if(u==='ha') return n2(e.acreageHa!=null?e.acreageHa:(e.acreage!=null?e.acreage/2.4710538:null),2)+' ha';
+  return n2(e.acreage,2)+' acres';
 }
 
 /* ---------- API ---------- */
-const apiConfigured = ()=>/^https:\/\/script\.google\.com\/macros\//.test(API_URL);
-async function api(action,payload){
-  if(!apiConfigured()) throw new Error('The page is not connected to its backend yet (API_URL in index.html).');
-  const body=JSON.stringify(Object.assign({action:action,token:S.token},payload||{}));
+async function api(action,data,opts){
+  opts=opts||{};
+  const payload=Object.assign({action:action,token:S.token||''},data||{});
   let res;
-  try{ res=await fetch(API_URL,{method:'POST',body:body}); }
-  catch(e){ S.offline=true; renderBanner(); throw new Error('No connection to the server. Check your network and try again.'); }
-  let j;
-  try{ j=await res.json(); }
-  catch(e){ throw new Error('Unexpected reply from the server. Check the Web app deployment (Execute as Me, access Anyone).'); }
-  if(S.offline){ S.offline=false; renderBanner(); }
+  try{ res=await fetch(API_URL,{method:'POST',body:JSON.stringify(payload),redirect:'follow'}); }
+  catch(e){ throw new Error('No connection to the server. Check your network and try again.'); }
+  let j; const txt=await res.text();
+  try{ j=JSON.parse(txt); }catch(e){ throw new Error('Unexpected reply from the server. Check that API_URL is the /exec web app URL and that the script is deployed.'); }
   if(!j.ok){
-    if(j.code==='auth'){ logout(true); }
+    if(j.code==='AUTH'&&!opts.noAuthRedirect){ signOutLocal(); render(); }
     throw new Error(j.error||'Request failed');
   }
-  return j;
+  if(j.serverTime){ S.serverOffset=new Date(j.serverTime).getTime()-Date.now(); }
+  return j.data;
 }
-function mergeEntries(list){
-  if(!list||!list.length) return;
-  const m={}; S.entries.forEach(e=>{ m[e.id]=e; });
-  list.forEach(e=>{ m[e.id]=e; });
-  S.entries=Object.values(m).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
-}
-async function sync(full){
-  if(S.syncing||!S.token) return; S.syncing=true;
-  try{
-    const r=await api('list',{since:full?'':S.since});
-    if(full) S.entries=[];
-    mergeEntries(r.entries);
-    S.since=new Date(Date.parse(r.now)-120000).toISOString();
-    S.config=Object.assign({},DEFAULT_CONFIG,r.config||{});
-    S.names=r.names||{}; if(r.users) S.users=r.users;
-    S.loaded=true; S.lastSync=Date.now();
-    onData('entries');
-  }catch(e){
-    if(!S.loaded&&S.token){ $('#main').innerHTML='<div class="card"><h3>Could not load data</h3><p class="muted">'+esc(errMsg(e))+'</p><button class="btn primary" id="retry">Try again</button></div>'; const b=$('#retry'); if(b) b.addEventListener('click',()=>sync(true)); }
-  }finally{ S.syncing=false; }
-}
-function startPolling(){
-  if(S.pollT) clearInterval(S.pollT);
-  S.pollT=setInterval(()=>{ if(document.visibilityState==='visible'&&S.view!=='form') sync(false); },POLL_MS);
-  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&S.token&&Date.now()-S.lastSync>8000&&S.view!=='form') sync(false); });
-}
-function logout(expired){
-  S.token=null; S.me=null; S.entries=[]; S.since=''; S.loaded=false; S.users=[]; S.view='list'; S.tab=null; S.draft=null;
-  clearSession(); if(S.pollT) clearInterval(S.pollT);
-  renderWho(); renderTabs(); renderLogin(expired?'Your sign-in has expired. Sign in again.':'');
-}
+function signOutLocal(){ S.token=null; S.me=null; S.loaded=false; S.entries=[]; S.users=[]; S.view='list'; S.tab=null; S.detailId=null; S.draft=null; lsSet('cpt_token',null); clearInterval(S.pollT); }
 
 /* ---------- boot ---------- */
-function boot(){
-  loadSession();
-  renderBanner();
-  if(!S.token){ renderLogin(''); return; }
-  renderWho(); enterApp();
-}
-async function enterApp(){
-  if(S.me.mustChange){ renderChangePassword(true); return; }
-  $('#main').innerHTML='<div class="center"><span class="spin"></span> Loading…</div>';
-  await sync(true);
-  startPolling();
-}
-function renderBanner(){
-  const b=$('#banner'); if(!b) return;
-  if(!apiConfigured()) { b.innerHTML='<div class="banner">Setup needed: paste the Apps Script Web app URL into API_URL at the top of index.html.</div>'; return; }
-  b.innerHTML=S.offline?'<div class="banner offline">No connection. Showing the last data loaded; changes will fail until the network is back.</div>':'';
-}
-function onData(src){
-  if(!S.loaded) return;
-  const tabs=visibleTabs();
-  if(!S.tab||!tabs.find(t=>t.id===S.tab)){
-    const h=(location.hash||'').slice(1);
-    S.tab=(tabs.find(t=>t.id===h)||tabs[0]||{id:null}).id;
+async function boot(){
+  if(!API_URL||API_URL.indexOf('PASTE_YOUR')===0||!/^https:\/\//.test(API_URL)){
+    $('#main').innerHTML='<div class="setupnote"><div class="card"><h2>One more setup step</h2><p>This page is not yet connected to its backend. Open <code class="k">index.html</code>, find <code class="k">API_URL</code> near the top of the script, and paste the Apps Script <b>web app URL</b> (it ends in <code class="k">/exec</code>). See README.md for the full steps.</p></div></div>';
+    return;
   }
-  renderWho(); renderTabs();
-  if(S.view==='form'||S.view==='password') return;
-  if(S.view==='detail'&&src==='entries'){ if(detailStamp()===S.detailStamp) return; }
-  if(S.tab==='admin'&&S.view==='list'&&src==='entries') return;
+  S.token=lsGet('cpt_token');
+  if(S.token){
+    try{ await loadAll(); }
+    catch(e){ if(!S.token){ /* auth cleared */ } else toast(errMsg(e)); }
+  }
   render();
+  window.addEventListener('hashchange',()=>{ if(!S.loaded) return; const h=(location.hash||'').slice(1); const t=visibleTabs().find(x=>x.id===h); if(t&&t.id!==S.tab&&S.view!=='form'){ S.tab=t.id; S.view='list'; S.detailId=null; renderTabs(); render(); } });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&S.loaded) syncEntries(true); });
 }
-function detailStamp(){ const e=S.entries.find(x=>x.id===S.detailId); return e?(e.updatedAt+'|'+e.status):'gone'; }
-
-/* ---------- login / password ---------- */
-function renderLogin(msg){
-  $('#tabs').innerHTML=''; $('#who').innerHTML='';
-  $('#main').innerHTML='<div class="login"><div class="card">'+
-    '<div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V8"/><path d="M12 13c0-3 2.5-5 6-5"/><path d="M12 10C12 7 9.5 5 6 5"/><path d="M12 17c0-3 2.5-5 6-5"/><path d="M12 14c0-3-2.5-5-6-5"/></svg></div>'+
-    '<h2>Sign in</h2><p class="muted">Use the username and password given to you by the administrator.</p>'+
-    (msg?'<div class="note red" style="margin-bottom:12px">'+esc(msg)+'</div>':'')+
-    '<form id="loginForm"><div class="field"><label for="lu">Username</label><input id="lu" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>'+
-    '<div class="field"><label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password" required></div>'+
-    '<div id="loginErr"></div><button class="btn primary block" id="loginBtn" type="submit">Sign in</button></form>'+
-    '<p class="small faint" style="margin-top:14px">Forgotten your password? Ask an administrator to set a new temporary one.</p></div></div>';
-  $('#loginForm').addEventListener('submit',async ev=>{
-    ev.preventDefault(); const btn=$('#loginBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Signing in…'; $('#loginErr').innerHTML='';
-    try{
-      const r=await api('login',{username:$('#lu').value.trim(),password:$('#lp').value});
-      S.token=r.token; S.me=r.user; saveSession(); renderWho(); enterApp();
-    }catch(e){ $('#loginErr').innerHTML='<div class="note red" style="margin-bottom:12px">'+esc(errMsg(e))+'</div>'; btn.disabled=false; btn.textContent='Sign in'; }
-  });
-  $('#lu').focus();
+async function loadAll(){
+  const d=await api('bootstrap');
+  S.me=d.me; S.config=Object.assign({},DEFAULT_CONFIG,d.config||{});
+  S.cbcs=d.cbcs||[]; S.harvesters=d.harvesters||[]; S.banks=d.banks||[]; S.users=d.users||[]; S.entries=d.entries||[]; S.lastSync=d.serverTime||nowISO();
+  S.loaded=true;
+  const tabs=visibleTabs(); const h=(location.hash||'').slice(1);
+  S.tab=(tabs.find(t=>t.id===h)||tabs[0]||{id:null}).id;
+  if(S.me.mustChange) S.view='password'; else S.view='list';
+  clearInterval(S.pollT); S.pollT=setInterval(()=>{ if(!document.hidden) syncEntries(true); },90000);
 }
-function renderChangePassword(forced){
-  S.view='password'; $('#tabs').innerHTML='';
-  $('#main').innerHTML='<div class="login"><div class="card"><h2>'+(forced?'Choose your password':'Change password')+'</h2>'+
-    '<p class="muted">'+(forced?'You signed in with a temporary password. Choose your own before continuing.':'Enter your current password and a new one.')+'</p>'+
-    '<form id="pwForm"><div class="field"><label for="pc">'+(forced?'Temporary password':'Current password')+'</label><input id="pc" type="password" autocomplete="current-password" required></div>'+
-    '<div class="field"><label for="pn">New password</label><input id="pn" type="password" autocomplete="new-password" required minlength="8"><div class="hint">At least 8 characters.</div></div>'+
-    '<div class="field"><label for="pn2">Repeat new password</label><input id="pn2" type="password" autocomplete="new-password" required></div>'+
-    '<div id="pwErr"></div><div class="actions"><button class="btn primary" id="pwBtn" type="submit">Save password</button>'+(forced?'':'<button class="btn" type="button" id="pwCancel">Cancel</button>')+'</div></form></div></div>';
-  $('#pwForm').addEventListener('submit',async ev=>{
-    ev.preventDefault();
-    if($('#pn').value!==$('#pn2').value){ $('#pwErr').innerHTML='<div class="note red" style="margin-bottom:12px">The two new passwords do not match.</div>'; return; }
-    const btn=$('#pwBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…'; $('#pwErr').innerHTML='';
-    try{
-      const r=await api('changePassword',{current:$('#pc').value,next:$('#pn').value});
-      S.token=r.token; S.me=r.user; saveSession(); toast('Password saved');
-      S.view='list'; renderWho(); if(S.loaded){ renderTabs(); render(); startPolling(); } else enterApp();
-    }catch(e){ $('#pwErr').innerHTML='<div class="note red" style="margin-bottom:12px">'+esc(errMsg(e))+'</div>'; btn.disabled=false; btn.textContent='Save password'; }
-  });
-  const c=$('#pwCancel'); if(c) c.addEventListener('click',()=>{ S.view='list'; renderTabs(); render(); });
-  $('#pc').focus();
+async function syncEntries(quiet){
+  if(!S.loaded||S.view==='form'||S.busy) return;
+  try{
+    const d=await api('entries',{since:S.lastSync});
+    if(d.entries&&d.entries.length){
+      const map=new Map(S.entries.map(e=>[e.id,e])); d.entries.forEach(e=>map.set(e.id,e));
+      S.entries=[...map.values()].sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+      if(S.view==='list'||S.view==='detail'){ renderTabs(); render(); }
+    }
+    S.lastSync=d.serverTime||S.lastSync;
+    if(!quiet) toast('Up to date');
+  }catch(e){ if(!quiet) toast(errMsg(e)); }
 }
 
-/* ---------- chrome ---------- */
+/* ---------- header / tabs ---------- */
 function renderWho(){
   const w=$('#who');
-  if(!S.me){ w.innerHTML=''; return; }
-  const rs=myRoles().map(r=>(ROLE_DEFS[r]||{label:r}).label);
-  const initials=(S.me.name||S.me.username||'?').split(/\s+/).map(s=>s[0]).join('').slice(0,2).toUpperCase();
-  w.innerHTML='<div class="acct"><button type="button" id="acctBtn" aria-haspopup="true" aria-expanded="false"><span class="av"></span><div style="min-width:0;text-align:left"><div class="n"></div><div class="r">'+esc(rs.join(', ')||'No role')+'</div></div></button>'+
-    '<div class="menu" id="acctMenu" hidden><button type="button" id="acctPw">Change password</button><button type="button" id="acctOut">Sign out</button></div></div>';
-  w.querySelector('.av').textContent=initials; w.querySelector('.n').textContent=S.me.name||S.me.username;
-  const btn=$('#acctBtn'),menu=$('#acctMenu');
-  btn.addEventListener('click',ev=>{ ev.stopPropagation(); const open=menu.hidden; menu.hidden=!open; btn.setAttribute('aria-expanded',String(open)); });
-  $('#acctPw').addEventListener('click',()=>{ if(S.view==='form'&&!confirm('Leave this form?')) return; renderChangePassword(false); });
-  $('#acctOut').addEventListener('click',()=>{ if(S.view==='form'&&!confirm('Sign out and leave this form?')) return; logout(false); });
+  if(!S.me||!S.loaded){ w.innerHTML=''; w.hidden=true; return; }
+  const rs=myRoles().filter(r=>r!=='admin').map(r=>ROLE_DEFS[r].label);
+  const roleTxt=isAdmin()?'Administrator':(rs.length?rs.join(', '):'No role assigned yet');
+  w.hidden=false;
+  w.innerHTML='<span class="av" aria-hidden="true">'+esc(initials(S.me.name))+'</span><div style="min-width:0"><div class="n">'+esc(S.me.name||S.me.username)+'</div><div class="r">'+esc(roleTxt)+'</div></div>';
+}
+function toggleAcct(open){
+  let m=$('#acctMenu');
+  if(!open){ if(m) m.remove(); return; }
+  if(m) return;
+  m=document.createElement('div'); m.id='acctMenu'; m.className='acct';
+  m.innerHTML='<div class="hd"><b>'+esc(S.me.name||'')+'</b>@'+esc(S.me.username)+'</div>'+
+    '<button type="button" data-act="refresh">Refresh data</button>'+
+    '<button type="button" data-act="password">Change password</button>'+
+    '<button type="button" data-act="privacy">Data protection statement</button>'+
+    '<button type="button" data-act="signout">Sign out</button>';
+  document.body.appendChild(m);
+  m.addEventListener('click',ev=>{
+    const b=ev.target.closest('[data-act]'); if(!b) return; const a=b.getAttribute('data-act'); toggleAcct(false);
+    if(a==='refresh') syncEntries(false);
+    if(a==='password'){ S.view='password'; render(); }
+    if(a==='privacy') showPrivacy();
+    if(a==='signout') doSignOut();
+  });
+}
+async function doSignOut(){
+  if(S.view==='form'&&!confirm('Sign out? The entry you are filling will be lost.')) return;
+  try{ await api('logout'); }catch(e){}
+  signOutLocal(); renderWho(); renderTabs(); render();
 }
 function renderTabs(){
   const nav=$('#tabs');
-  if(!S.me||!S.loaded||S.view==='password'){ nav.innerHTML=''; return; }
+  if(!S.loaded||!S.me||S.view==='password'){ nav.innerHTML=''; return; }
   const tabs=visibleTabs();
   nav.innerHTML=tabs.map(t=>{
     let badge=0;
@@ -602,22 +670,93 @@ function renderTabs(){
     return '<button type="button" data-tab="'+t.id+'" class="'+(S.tab===t.id?'on':'')+'">'+t.icon+'<span>'+esc(t.label)+'</span>'+(badge?'<span class="b num">'+badge+'</span>':'')+'</button>';
   }).join('');
   nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
-    if(S.view==='form'&&!confirm('Leave this form? Unsaved details will be kept until you reload the page.')) return;
-    S.tab=b.getAttribute('data-tab'); S.view='list'; S.detailId=null; setHash(S.tab); renderTabs(); render(); window.scrollTo(0,0);
+    if(S.view==='form'&&!confirm('Leave this form? What you typed will be lost.')) return;
+    S.tab=b.getAttribute('data-tab'); S.view='list'; S.detailId=null; S.draft=null; setHash(S.tab); renderTabs(); render(); window.scrollTo(0,0);
   }));
+}
+
+/* ---------- privacy dialog ---------- */
+function showPrivacy(){
+  let d=$('#privacyDlg');
+  if(!d){ d=document.createElement('dialog'); d.id='privacyDlg'; d.className='dlg'; document.body.appendChild(d); }
+  const paras=String(cfg().privacyText||DEFAULT_PRIVACY).split(/\n\s*\n/).map(p=>'<p>'+esc(p)+'</p>').join('');
+  d.innerHTML='<div class="dh"><h3 style="margin:0">Data Protection Statement</h3><button type="button" class="btn sm" id="privClose">Close</button></div><div class="db">'+paras+'<p class="faint small">Version '+esc(cfg().privacyVersion||'1')+'</p></div>';
+  d.querySelector('#privClose').addEventListener('click',()=>d.close());
+  d.addEventListener('click',ev=>{ if(ev.target===d) d.close(); });
+  if(typeof d.showModal==='function') d.showModal(); else d.setAttribute('open','');
+}
+
+/* ---------- auth views ---------- */
+function viewLogin(){
+  return '<div class="login"><div class="card">'+
+    '<div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V8"/><path d="M12 13c0-3 2.5-5 6-5"/><path d="M12 10C12 7 9.5 5 6 5"/><path d="M12 17c0-3 2.5-5 6-5"/><path d="M12 14c0-3-2.5-5-6-5"/></svg></div>'+
+    '<h2>Sign in</h2><p class="muted">Use the username and password given to you by the administrator.</p>'+
+    '<form id="loginForm" novalidate>'+
+    '<div class="field"><label for="lu">Username</label><input id="lu" autocomplete="username" autocapitalize="none" spellcheck="false"></div>'+
+    '<div class="field"><label for="lp">Password</label><div class="pw"><input id="lp" type="password" autocomplete="current-password"><button type="button" id="lpShow">Show</button></div></div>'+
+    '<div id="loginErr" class="errmsg" style="margin-bottom:10px"></div>'+
+    '<button class="btn primary block" id="loginBtn" type="submit">Sign in</button></form>'+
+    '<div class="foot">Angata Sugar Mills · Cane Permit Tracker v'+APP_VERSION+'<br><button type="button" class="linkish" id="privLink">Data protection statement</button></div>'+
+    '</div></div>';
+}
+function bindLogin(){
+  $('#privLink').addEventListener('click',showPrivacy);
+  $('#lpShow').addEventListener('click',()=>{ const i=$('#lp'); i.type=i.type==='password'?'text':'password'; $('#lpShow').textContent=i.type==='password'?'Show':'Hide'; });
+  $('#loginForm').addEventListener('submit',async ev=>{
+    ev.preventDefault(); if(S.busy) return;
+    const u=$('#lu').value.trim(),p=$('#lp').value; const err=$('#loginErr'); err.textContent='';
+    if(!u||!p){ err.textContent='Enter your username and password.'; return; }
+    S.busy=true; const b=$('#loginBtn'); b.disabled=true; b.innerHTML='<span class="spin"></span> Signing in…';
+    try{
+      const d=await api('login',{username:u,password:p},{noAuthRedirect:true});
+      S.token=d.token; lsSet('cpt_token',S.token);
+      await loadAll(); renderWho(); renderTabs(); render(); window.scrollTo(0,0);
+    }catch(e){ err.textContent=errMsg(e); b.disabled=false; b.textContent='Sign in'; }
+    finally{ S.busy=false; }
+  });
+}
+function viewPassword(){
+  const forced=!!(S.me&&S.me.mustChange);
+  return '<div class="login"><div class="card">'+
+    '<h2>'+(forced?'Set your password':'Change password')+'</h2><p class="muted">'+(forced?'You signed in with a temporary password. Choose your own before continuing.':'Choose a new password for your account.')+'</p>'+
+    '<form id="pwForm" novalidate>'+
+    '<div class="field"><label for="p0">'+(forced?'Temporary password':'Current password')+'</label><input id="p0" type="password" autocomplete="current-password"></div>'+
+    '<div class="field"><label for="p1">New password</label><div class="pw"><input id="p1" type="password" autocomplete="new-password"><button type="button" id="p1Show">Show</button></div><div class="hint">At least 8 characters.</div></div>'+
+    '<div class="field"><label for="p2">Repeat new password</label><input id="p2" type="password" autocomplete="new-password"></div>'+
+    '<div id="pwErr" class="errmsg" style="margin-bottom:10px"></div>'+
+    '<div class="actions"><button class="btn primary" id="pwBtn" type="submit">Save password</button>'+(forced?'<button class="btn" type="button" id="pwOut">Sign out</button>':'<button class="btn" type="button" id="pwCancel">Cancel</button>')+'</div></form></div></div>';
+}
+function bindPassword(){
+  $('#p1Show').addEventListener('click',()=>{ const i=$('#p1'); i.type=i.type==='password'?'text':'password'; $('#p1Show').textContent=i.type==='password'?'Show':'Hide'; });
+  const c=$('#pwCancel'); if(c) c.addEventListener('click',()=>{ S.view='list'; renderTabs(); render(); });
+  const o=$('#pwOut'); if(o) o.addEventListener('click',doSignOut);
+  $('#pwForm').addEventListener('submit',async ev=>{
+    ev.preventDefault(); if(S.busy) return; const err=$('#pwErr'); err.textContent='';
+    const p0=$('#p0').value,p1=$('#p1').value,p2=$('#p2').value;
+    if(p1.length<8){ err.textContent='The new password needs at least 8 characters.'; return; }
+    if(p1!==p2){ err.textContent='The two new passwords do not match.'; return; }
+    S.busy=true; const b=$('#pwBtn'); b.disabled=true; b.innerHTML='<span class="spin"></span> Saving…';
+    try{ await api('changePassword',{oldPassword:p0,newPassword:p1}); S.me.mustChange=false; toast('Password saved'); S.view='list'; renderWho(); renderTabs(); render(); }
+    catch(e){ err.textContent=errMsg(e); b.disabled=false; b.textContent='Save password'; }
+    finally{ S.busy=false; }
+  });
 }
 
 /* ---------- render ---------- */
 function render(){
-  const m=$('#main');
-  if(!S.tab){ m.innerHTML='<div class="card"><h2>No role assigned</h2><p class="muted">Ask an administrator to give your account a role.</p></div>'; return; }
-  if(S.view==='detail'){ S.detailStamp=detailStamp(); m.innerHTML=viewDetail(); bindDetail(); }
+  const m=$('#main'); destroyMaps();
+  renderWho();
+  if(!S.loaded||!S.me){ m.innerHTML=viewLogin(); bindLogin(); renderTabs(); return; }
+  if(S.view==='password'){ m.innerHTML=viewPassword(); bindPassword(); renderTabs(); return; }
+  if(!S.tab){ m.innerHTML='<div class="card"><h2>No role assigned yet</h2><p class="muted">An administrator needs to give you a role (field scout, data checker, permit officer or zoning) before you can use this tool.</p></div>'; return; }
+  if(S.view==='detail'){ m.innerHTML=viewDetail(); bindDetail(); }
   else if(S.view==='form'){ m.innerHTML=viewForm(); bindForm(); }
   else {
     const v={capture:viewCapture,check:viewCheck,permits:viewPermits,zoning:viewZoning,board:viewBoard,admin:viewAdmin}[S.tab];
-    m.innerHTML=v?v():'';
+    m.innerHTML=(v?v():'')+'<div class="srv">Last synced '+esc(fmt(S.lastSync))+' · <button type="button" class="linkish" id="syncNow">refresh</button></div>';
     bindList();
     if(S.tab==='admin') bindAdmin();
+    const sn=$('#syncNow'); if(sn) sn.addEventListener('click',()=>syncEntries(false));
   }
   loadImages();
 }
@@ -626,8 +765,8 @@ function entryRow(e,opts){
   const loc=[e.area,e.sublocation].filter(Boolean).join(', ');
   return '<div class="erow" role="button" tabindex="0" data-open="'+esc(e.id)+'">'+
     '<div><div class="name">'+esc(e.farmerName||'Unnamed farmer')+'</div>'+
-    '<div class="meta">LR '+esc(e.plotLR||'—')+(e.cbc?' · CBC '+esc(e.cbc):'')+(loc?' · '+esc(loc):'')+'</div>'+
-    '<div class="meta small">'+(opts.showScout?'Scout '+who(e.createdBy)+' · ':'')+'Captured '+esc(fmtD(e.createdAt))+(e.acreage?' · '+esc(e.acreage)+' '+esc(S.config.acreageUnit):'')+'</div></div>'+
+    '<div class="meta">LR '+esc(e.plotLR||'—')+(e.cbc?' · CBC '+esc(e.cbc):'')+(e.zone?' · Zone '+esc(e.zone):'')+(loc?' · '+esc(loc):'')+'</div>'+
+    '<div class="meta small">'+(opts.showScout?'Scout '+who(e.createdBy)+' · ':'')+'Captured '+esc(fmtD(e.createdAt))+(e.acreage?' · '+esc(acreageText(e)):'')+(e.harvesterName?' · '+esc(e.harvesterName):'')+'</div></div>'+
     '<div class="right">'+chip(e)+(e.permit&&e.permit.number?'<span class="permit">Permit '+esc(e.permit.number)+'</span>':'')+rail(e,true)+'</div>'+
     '</div>';
 }
@@ -636,26 +775,20 @@ function listOf(items,opts,emptyText){
   return '<div class="list">'+items.map(e=>entryRow(e,opts)).join('')+'</div>';
 }
 function bindList(){
-  document.querySelectorAll('[data-open]').forEach(b=>{
+  $$('[data-open]').forEach(b=>{
     const open=()=>{ S.detailId=b.getAttribute('data-open'); S.view='detail'; render(); window.scrollTo(0,0); };
     b.addEventListener('click',open);
     b.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); open(); } });
   });
   const nb=$('#newEntry'); if(nb) nb.addEventListener('click',()=>startForm(null));
 }
-function counts(list){
-  const c={total:list.length,submitted:0,returned:0,rejected:0,pushed:0,permit_issued:0,zoned:0,withPermit:0};
-  list.forEach(e=>{ if(c[e.status]!=null) c[e.status]++; if(e.permit&&e.permit.number) c.withPermit++; });
-  return c;
-}
 
 /* ---- scout ---- */
 function viewCapture(){
   const mine=S.entries.filter(e=>e.createdBy===S.me.username);
-  const c=counts(mine);
-  const returned=mine.filter(e=>e.status==='returned');
+  const c=counts(mine); const returned=mine.filter(e=>e.status==='returned');
   return '<div class="row between" style="margin-bottom:12px"><div><h2>My entries</h2><p class="muted" style="margin:0">Everything you have captured, with where each one is in the permit process.</p></div>'+
-    '<button class="btn primary" id="newEntry"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New entry</button></div>'+
+    '<button class="btn primary" id="newEntry">'+ICON.plus+'New entry</button></div>'+
     '<div class="stats">'+
       '<div class="stat"><div class="v num">'+c.total+'</div><div class="l">Captured</div></div>'+
       '<div class="stat"><div class="v num">'+c.submitted+'</div><div class="l">Awaiting check</div></div>'+
@@ -671,230 +804,160 @@ function viewCapture(){
 function viewCheck(){
   const q=S.entries.filter(e=>e.status==='submitted');
   const done=S.entries.filter(e=>['pushed','permit_issued','zoned','returned','rejected'].includes(e.status)).slice(0,30);
-  return '<h2>Data check</h2><p class="muted">Verify each submission against the ID photos, then push it to the ERP or return it to the scout.</p>'+
+  return '<h2>Data check</h2><p class="muted">Verify each submission against the ID and bank card photos, then push it to the ERP or return it to the scout.</p>'+
     '<div class="stats"><div class="stat hi"><div class="v num">'+q.length+'</div><div class="l">Waiting for check</div></div>'+
     '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='pushed').length+'</div><div class="l">Pushed, no permit yet</div></div>'+
     '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='returned').length+'</div><div class="l">Returned to scouts</div></div></div>'+
-    '<h3>Queue</h3>'+listOf(q.slice().reverse(),{showScout:true},'Nothing waiting. New submissions from scouts will appear here.')+
+    '<h3>Queue</h3>'+listOf(q,{showScout:true},'Nothing waiting. New submissions from scouts will appear here.')+
     '<hr class="hr"><h3>Recently handled</h3>'+listOf(done,{showScout:true},'No entries handled yet.');
 }
 /* ---- permits ---- */
 function viewPermits(){
   const q=S.entries.filter(e=>e.status==='pushed');
   const done=S.entries.filter(e=>e.permit&&e.permit.number).slice(0,30);
-  return '<h2>Permits</h2><p class="muted">These entries are in the ERP. Generate the permit there, then record its number here to close process one.</p>'+
+  return '<h2>Permits</h2><p class="muted">These entries are in the ERP. Open the permit there, then record its number and the CCS clips here.</p>'+
     '<div class="stats"><div class="stat hi"><div class="v num">'+q.length+'</div><div class="l">Ready for permit</div></div>'+
     '<div class="stat"><div class="v num">'+done.length+'</div><div class="l">Permits issued</div></div>'+
     '<div class="stat"><div class="v num">'+S.entries.filter(e=>e.status==='permit_issued').length+'</div><div class="l">Open (not yet zoned)</div></div></div>'+
-    '<h3>Ready for permit</h3>'+listOf(q.slice().reverse(),{showScout:true},'Nothing ready. Entries appear here once the data checker pushes them to the ERP.')+
+    '<h3>Ready for permit</h3>'+listOf(q,{showScout:true},'Nothing ready. Entries appear here once the data checker pushes them to the ERP.')+
     '<hr class="hr"><h3>Recently issued</h3>'+listOf(done,{showScout:true},'No permits recorded yet.');
 }
 /* ---- zoning ---- */
 function viewZoning(){
   const open=S.entries.filter(e=>e.status==='permit_issued');
-  const partial=open.filter(e=>e.zoning&&(e.zoning.inspected||e.zoning.polygonReceived||e.zoning.zone));
+  const partial=open.filter(e=>e.zoning&&(e.zoning.inspected||e.zoning.polygonQc));
   const done=S.entries.filter(e=>e.status==='zoned').slice(0,30);
-  return '<h2>Zoning</h2><p class="muted">Open permits waiting for field inspection, polygon receipt and zoning. Enter the zone, CBC and linear distance to close each one.</p>'+
+  const flagged=open.filter(e=>e.zoneOut||!(e.polygon&&e.polygon.length>=3));
+  return '<h2>Zoning</h2><p class="muted">Open permits waiting for GIS quality control. The zone, CBC and linear distance are pre-computed from the scout’s polygon; confirm or correct them, then close each one.</p>'+
     '<div class="stats"><div class="stat hi"><div class="v num">'+open.length+'</div><div class="l">Open permits</div></div>'+
     '<div class="stat"><div class="v num">'+partial.length+'</div><div class="l">In progress</div></div>'+
+    '<div class="stat"><div class="v num">'+flagged.length+'</div><div class="l">Flagged (no polygon / beyond last zone)</div></div>'+
     '<div class="stat"><div class="v num">'+done.length+'</div><div class="l">Zoned</div></div></div>'+
-    '<h3>Open permits</h3>'+listOf(open.slice().reverse(),{showScout:true},'No open permits. Entries appear here once a permit number is recorded.')+
+    '<h3>Open permits</h3>'+listOf(open,{showScout:true},'No open permits. Entries appear here once a permit number is recorded.')+
     '<hr class="hr"><h3>Recently zoned</h3>'+listOf(done,{showScout:true},'Nothing zoned yet.');
 }
 /* ---- board ---- */
-function boardItems(){
+function filteredBoard(){
   const f=S.boardFilter, q=S.boardQuery.trim().toLowerCase();
-  let items=S.entries;
-  if(f!=='all') items=items.filter(e=>e.status===f);
-  if(q) items=items.filter(e=>[e.farmerName,e.idNumber,e.plotLR,e.phone,e.cbc,e.permit&&e.permit.number,e.area,e.sublocation,S.names[e.createdBy]].some(v=>v&&String(v).toLowerCase().includes(q)));
+  let items=S.entries; if(f!=='all') items=items.filter(e=>e.status===f);
+  if(q) items=items.filter(e=>[e.farmerName,e.idNumber,e.plotLR,e.phone,e.cbc,e.zone,e.harvesterName,e.permit&&e.permit.number,e.area,e.sublocation,e.bankAccount].some(v=>v&&String(v).toLowerCase().includes(q)));
   return items;
 }
 function viewBoard(){
   const c=counts(S.entries); const f=S.boardFilter;
   const fb=(id,l)=>'<button type="button" class="btn sm'+(f===id?' on':'')+'" data-filter="'+id+'">'+l+'</button>';
-  return '<h2>All entries</h2><p class="muted">Every capture and where it stands. Search by farmer, ID, LR number, phone, permit number or scout.</p>'+
+  return '<h2>All entries</h2><p class="muted">Every capture and where it stands. Search by farmer, ID, LR number, phone, harvester, zone or permit number.</p>'+
     '<div class="stats"><div class="stat"><div class="v num">'+c.total+'</div><div class="l">Captured</div></div>'+
     '<div class="stat"><div class="v num">'+c.submitted+'</div><div class="l">Awaiting check</div></div>'+
     '<div class="stat"><div class="v num">'+c.pushed+'</div><div class="l">Pushed to ERP</div></div>'+
     '<div class="stat"><div class="v num">'+c.withPermit+'</div><div class="l">With permit number</div></div>'+
     '<div class="stat"><div class="v num">'+c.permit_issued+'</div><div class="l">Open permits</div></div>'+
     '<div class="stat"><div class="v num">'+c.zoned+'</div><div class="l">Zoned</div></div></div>'+
-    '<div class="filters"><div class="search"><input id="boardQ" type="search" placeholder="Search farmer, ID, LR, phone, permit…" value="'+esc(S.boardQuery)+'"></div></div>'+
+    '<div class="filters"><div class="search"><input id="boardQ" type="search" placeholder="Search farmer, ID, LR, phone, harvester, permit…" value="'+esc(S.boardQuery)+'"></div></div>'+
     '<div class="filters">'+fb('all','All')+fb('submitted','Awaiting check')+fb('returned','Returned')+fb('pushed','Pushed')+fb('permit_issued','Open permits')+fb('zoned','Zoned')+fb('rejected','Rejected')+'</div>'+
-    listOf(boardItems(),{showScout:true},S.boardQuery||f!=='all'?'No entries match.':'No entries yet.');
-}
-
-/* ---- admin ---- */
-function viewAdmin(){
-  const cfg=S.config;
-  const users=S.users.slice().sort((a,b)=>(a.name||a.username).localeCompare(b.name||b.username));
-  const cred=S.newCred?'<div class="cred"><b>Share these sign-in details with '+esc(S.newCred.name)+':</b><br>Username <code>'+esc(S.newCred.username)+'</code> · Temporary password <code>'+esc(S.newCred.password)+'</code><br><span class="small">They will be asked to choose their own password at first sign in. This is the only time the password is shown.</span></div>':'';
-  return '<h2>Admin</h2><p class="muted">Manage who can sign in and what they can do, keep the reference lists current, and export the data.</p>'+
-    '<div class="card"><h3>Add a user</h3><p class="small muted">Create an account with a temporary password. The person is asked to change it the first time they sign in.</p>'+
-      '<form id="addUser"><div class="grid two">'+
-      '<div class="field"><label for="auName">Full name <span class="req">*</span></label><input id="auName" required></div>'+
-      '<div class="field"><label for="auUser">Username <span class="req">*</span></label><input id="auUser" required autocapitalize="none" spellcheck="false" placeholder="e.g. jotieno"><div class="hint">Letters, numbers, dots or dashes. Used to sign in.</div></div>'+
-      '<div class="field"><label for="auEmail">Email (optional)</label><input id="auEmail" type="email"></div>'+
-      '<div class="field"><label for="auPw">Temporary password <span class="req">*</span></label><div class="row" style="flex-wrap:nowrap"><input id="auPw" required minlength="6" autocomplete="off" style="flex:1"><button type="button" class="btn" id="auGen">Generate</button></div></div>'+
-      '</div><div class="field"><label>Roles <span class="req">*</span></label><div class="rolepick">'+ALL_ROLES.map(r=>'<label title="'+esc(ROLE_DEFS[r].desc)+'"><input type="checkbox" name="auRole" value="'+r+'">'+esc(ROLE_DEFS[r].label)+'</label>').join('')+'</div></div>'+
-      '<button class="btn primary" type="submit" id="auBtn">Add user</button></form>'+cred+'</div>'+
-    '<div class="card"><h3>Users</h3>'+
-      (users.length?'<table class="utable"><thead><tr><th>Name</th><th>Roles</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+users.map(u=>{
-        const me=u.username===S.me.username;
-        return '<tr data-user="'+esc(u.username)+'">'+
-          '<td data-l="Name"><b>'+esc(u.name||u.username)+'</b><div class="small muted">'+esc(u.username)+(u.email?' · '+esc(u.email):'')+'</div><div class="small faint">'+(u.lastLogin?'Last sign in '+esc(fmt(u.lastLogin)):'Never signed in')+'</div></td>'+
-          '<td data-l="Roles"><div class="rolepick">'+ALL_ROLES.map(r=>'<label><input type="checkbox" value="'+r+'"'+((u.roles||[]).includes(r)?' checked':'')+'>'+esc(ROLE_DEFS[r].label)+'</label>').join('')+'</div></td>'+
-          '<td data-l="Status">'+(u.active?'<span class="chip t-green">Active</span>':'<span class="chip t-grey">Deactivated</span>')+(u.mustChange?'<div class="small faint" style="margin-top:4px">Temporary password</div>':'')+'</td>'+
-          '<td data-l="Actions"><div class="ops"><button class="btn sm" data-saveroles="'+esc(u.username)+'">Save roles</button><button class="btn sm" data-resetpw="'+esc(u.username)+'">Set temporary password</button>'+(me?'':'<button class="btn sm '+(u.active?'danger':'')+'" data-toggle="'+esc(u.username)+'" data-active="'+(u.active?'0':'1')+'">'+(u.active?'Deactivate':'Reactivate')+'</button>')+'</div></td></tr>';
-      }).join('')+'</tbody></table>':'<div class="faint small">No users yet.</div>')+'</div>'+
-    '<div class="card"><h3>Reference lists</h3><p class="small muted">One item per line. The CBC list is the dropdown scouts and zoning choose from; the other lists are suggestions that can still be typed over.</p>'+
-      '<div class="grid two">'+
-      '<div class="field"><label>Cane buying centres (CBC)</label><textarea id="cfgCbcs" rows="6">'+esc((cfg.cbcs||[]).join('\n'))+'</textarea></div>'+
-      '<div class="field"><label>Zones</label><textarea id="cfgZones" rows="6">'+esc((cfg.zones||[]).join('\n'))+'</textarea></div>'+
-      '<div class="field"><label>Areas</label><textarea id="cfgAreas" rows="6">'+esc((cfg.areas||[]).join('\n'))+'</textarea></div>'+
-      '<div class="field"><label>Sublocations</label><textarea id="cfgSubs" rows="6">'+esc((cfg.sublocations||[]).join('\n'))+'</textarea></div>'+
-      '</div>'+
-      '<div class="field"><label>Acreage unit</label><select id="cfgUnit"><option value="acres"'+(cfg.acreageUnit==='acres'?' selected':'')+'>acres</option><option value="ha"'+(cfg.acreageUnit==='ha'?' selected':'')+'>hectares</option></select></div>'+
-      '<button class="btn primary" id="saveCfg">Save settings</button></div>'+
-    '<div class="card"><h3>Export</h3><p class="small muted">All entries as a CSV, one row per farmer. The same data is also in the Google Sheet behind this app.</p>'+
-      '<button class="btn" id="exportCsv">Download entries CSV</button><div class="small faint" style="margin-top:8px">'+S.entries.length+' entries</div></div>';
-}
-function genPassword(){ const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
-function bindAdmin(){
-  $('#auGen').addEventListener('click',()=>{ $('#auPw').value=genPassword(); });
-  $('#addUser').addEventListener('submit',async ev=>{
-    ev.preventDefault();
-    const roles=[...document.querySelectorAll('input[name=auRole]:checked')].map(i=>i.value);
-    if(!roles.length){ toast('Choose at least one role.'); return; }
-    const name=$('#auName').value.trim(), username=$('#auUser').value.trim().toLowerCase(), email=$('#auEmail').value.trim(), pw=$('#auPw').value;
-    const btn=$('#auBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Adding…';
-    try{
-      const r=await api('users.add',{name:name,username:username,email:email,roles:roles,tempPassword:pw});
-      S.users=r.users; S.newCred={name:name,username:username,password:pw}; S.names[username]=name; toast('User added'); render();
-    }catch(e){ toast(errMsg(e)); btn.disabled=false; btn.textContent='Add user'; }
-  });
-  document.querySelectorAll('[data-saveroles]').forEach(b=>b.addEventListener('click',async()=>{
-    const u=b.getAttribute('data-saveroles'); const row=b.closest('tr');
-    const roles=[...row.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value);
-    try{ const r=await api('users.update',{username:u,roles:roles}); S.users=r.users; toast('Roles saved'); S.newCred=null; render(); }catch(e){ toast(errMsg(e)); }
-  }));
-  document.querySelectorAll('[data-resetpw]').forEach(b=>b.addEventListener('click',async()=>{
-    const u=b.getAttribute('data-resetpw'); const user=S.users.find(x=>x.username===u)||{name:u};
-    const pw=prompt('New temporary password for '+(user.name||u)+' (at least 6 characters):',genPassword()); if(pw==null) return;
-    try{ const r=await api('users.resetPassword',{username:u,tempPassword:pw}); S.users=r.users; S.newCred={name:user.name||u,username:u,password:pw}; toast('Temporary password set'); render(); }catch(e){ toast(errMsg(e)); }
-  }));
-  document.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',async()=>{
-    const u=b.getAttribute('data-toggle'); const active=b.getAttribute('data-active')==='1';
-    if(!active&&!confirm('Deactivate this user? They will no longer be able to sign in.')) return;
-    try{ const r=await api('users.update',{username:u,active:active}); S.users=r.users; toast(active?'User reactivated':'User deactivated'); S.newCred=null; render(); }catch(e){ toast(errMsg(e)); }
-  }));
-  $('#saveCfg').addEventListener('click',async()=>{
-    const lines=id=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean);
-    try{ const r=await api('config.set',{cbcs:lines('#cfgCbcs'),zones:lines('#cfgZones'),areas:lines('#cfgAreas'),sublocations:lines('#cfgSubs'),acreageUnit:$('#cfgUnit').value}); S.config=Object.assign({},DEFAULT_CONFIG,r.config); toast('Settings saved'); }
-    catch(e){ toast(errMsg(e)); }
-  });
-  $('#exportCsv').addEventListener('click',exportCsv);
-}
-function exportCsv(){
-  const cols=['id','status','farmerName','phone','idNumber','plotLR','acreage','trips','sublocation','area','cbc','pinLat','pinLng','pinAccuracy','createdAt','createdBy','scoutName','checkedAt','erpRef','permitNumber','permitAt','zone','zoneCbc','linearDistanceKm','inspected','polygonReceived','zonedAt','agreedTermsAt'];
-  const g=v=>{ v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-  const rows=[cols.join(',')];
-  S.entries.forEach(e=>{
-    const z=e.zoning||{},p=e.permit||{},c=e.check||{},pin=e.pin||{};
-    rows.push([e.id,e.status,e.farmerName,e.phone,e.idNumber,e.plotLR,e.acreage,e.trips,e.sublocation,e.area,e.cbc,pin.lat,pin.lng,pin.accuracy,e.createdAt,e.createdBy,S.names[e.createdBy]||'',c.at,c.erpRef,p.number,p.at,z.zone,z.cbc,z.linearDistance,z.inspected?'yes':'',z.polygonReceived?'yes':'',z.at,e.agreedAt].map(g).join(','));
-  });
-  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cane-permit-entries-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+    listOf(filteredBoard(),{showScout:true},S.boardQuery||f!=='all'?'No entries match.':'No entries yet.');
 }
 
 /* ---------- images ---------- */
-function imgSrc(ref){ return ref?(S.imgCache[ref]||null):null; }
-let loadingImgs=false;
+function imgTag(fileId,alt){ if(!fileId) return ''; const c=S.imgCache[fileId]; return '<img alt="'+esc(alt)+'" '+(c?'src="'+esc(c)+'"':'')+' data-img="'+esc(fileId)+'" loading="lazy">'; }
 async function loadImages(){
-  if(loadingImgs) return;
-  const imgs=[...document.querySelectorAll('img[data-ref]')].filter(i=>!i.getAttribute('src'));
-  const refs=[...new Set(imgs.map(i=>i.getAttribute('data-ref')).filter(r=>r&&!S.imgCache[r]))];
-  imgs.forEach(i=>{ const c=S.imgCache[i.getAttribute('data-ref')]; if(c) i.src=c; });
-  if(!refs.length) return;
-  loadingImgs=true;
-  try{
-    for(let i=0;i<refs.length;i+=4){
-      const batch=refs.slice(i,i+4);
-      const r=await api('getImages',{refs:batch});
-      batch.forEach(ref=>{ if(r.images[ref]) S.imgCache[ref]=r.images[ref]; });
-      document.querySelectorAll('img[data-ref]').forEach(img=>{ const ref=img.getAttribute('data-ref'); if(S.imgCache[ref]&&!img.getAttribute('src')) img.src=S.imgCache[ref]; else if(batch.includes(ref)&&!S.imgCache[ref]) img.alt='Image unavailable'; });
-    }
-  }catch(e){ /* leave placeholders */ }
-  finally{ loadingImgs=false; }
+  const imgs=$$('img[data-img]:not([src])');
+  for(const img of imgs){
+    const id=img.getAttribute('data-img'); if(!id) continue;
+    if(S.imgCache[id]){ img.src=S.imgCache[id]; continue; }
+    try{ const d=await api('getImage',{fileId:id}); if(d&&d.dataUrl){ S.imgCache[id]=d.dataUrl; img.src=d.dataUrl; } else img.alt='Image not found'; }
+    catch(e){ img.alt='Image unavailable'; }
+  }
 }
 
 /* ---------- detail ---------- */
 function viewDetail(){
   const e=S.entries.find(x=>x.id===S.detailId);
-  if(!e) return '<button class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back</button><div class="empty">This entry is no longer available.</div>';
-  const im=e.images||{}; const pin=e.pin||{};
-  const gal=[['idFront','ID front'],['idBack','ID back'],['farmerPhoto','Farmer'],['signature','Signature']].map(([k,l])=>{
-    const ref=im[k]; if(!ref) return '<figure><div style="aspect-ratio:4/3;display:grid;place-items:center" class="faint small">None</div><figcaption>'+l+'</figcaption></figure>';
-    const src=imgSrc(ref);
-    return '<figure><img alt="'+l+'" '+(src?'src="'+esc(src)+'"':'')+' data-ref="'+esc(ref)+'"><figcaption>'+l+'</figcaption></figure>';
-  }).join('');
-  const mapLink=(pin.lat!=null&&pin.lng!=null)?'<a href="https://www.google.com/maps?q='+encodeURIComponent(pin.lat+','+pin.lng)+'" target="_blank" rel="noopener">'+esc(Number(pin.lat).toFixed(5))+', '+esc(Number(pin.lng).toFixed(5))+'</a>'+(pin.accuracy?' <span class="faint small">(±'+Math.round(pin.accuracy)+' m)</span>':''):'<span class="faint">Not captured</span>';
+  if(!e) return '<button class="back" id="back">'+ICON.back+'Back</button><div class="empty">This entry is no longer available.</div>';
+  const im=e.images||{};
+  const gal=IMG_KINDS.map(([k,l])=>{ const ref=im[k]; if(!ref) return '<figure><div style="aspect-ratio:4/3;display:grid;place-items:center" class="faint small">None</div><figcaption>'+l+'</figcaption></figure>'; return '<figure>'+imgTag(ref,l)+'<figcaption>'+l+'</figcaption></figure>'; }).join('');
   const hist=(e.history||[]).slice().reverse().map(h=>'<li><span class="when">'+esc(fmt(h.at))+'</span><span>'+esc(h.action)+(h.by?' — '+who(h.by):'')+(h.note?'<div class="muted small">'+esc(h.note)+'</div>':'')+'</span></li>').join('');
-  return '<button class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back</button>'+
+  const z=e.zoning||{}; const hasPoly=e.polygon&&e.polygon.length>=3;
+  const zoneBadge=e.zone?'<span class="zone'+(e.zoneOut?' out':'')+'">'+esc(e.zone)+'</span>':'<span class="faint">—</span>';
+  return '<button class="back" id="back">'+ICON.back+'Back</button>'+
     '<div class="row between" style="margin-bottom:8px"><h2 style="margin:0">'+esc(e.farmerName||'Unnamed farmer')+'</h2>'+chip(e)+'</div>'+
     '<div class="card">'+rail(e,false)+
-      (e.permit&&e.permit.number?'<div class="note blue" style="margin-top:10px">Permit number <b>'+esc(e.permit.number)+'</b> · issued '+esc(fmt(e.permit.at))+' by '+who(e.permit.by)+'</div>':'')+
+      (e.permit&&e.permit.number?'<div class="note blue" style="margin-top:10px">Permit number <b>'+esc(e.permit.number)+'</b>'+(e.permit.ccsClips?' · CCS clips: '+esc(e.permit.ccsClips):'')+' · issued '+esc(fmt(e.permit.at))+' by '+who(e.permit.by)+'</div>':'')+
       (e.status==='returned'&&e.check&&e.check.note?'<div class="note red" style="margin-top:10px">Returned: '+esc(e.check.note)+'</div>':'')+
       (e.status==='rejected'&&e.check&&e.check.note?'<div class="note" style="margin-top:10px">Rejected: '+esc(e.check.note)+'</div>':'')+
     '</div>'+
     actionPanel(e)+
-    '<div class="card"><h3>Farmer and field</h3><dl class="kv">'+
+    '<div class="card"><h3>Farmer</h3><dl class="kv">'+
       '<dt>Phone</dt><dd>'+esc(e.phone||'—')+'</dd><dt>ID number</dt><dd>'+esc(e.idNumber||'—')+'</dd>'+
-      '<dt>Plot LR No</dt><dd>'+esc(e.plotLR||'—')+'</dd><dt>Estimated acreage</dt><dd>'+esc(e.acreage||'—')+' '+esc(S.config.acreageUnit)+'</dd>'+
-      '<dt>Number of trips</dt><dd>'+esc(e.trips===''||e.trips==null?'—':e.trips)+'</dd><dt>Sublocation</dt><dd>'+esc(e.sublocation||'—')+'</dd>'+
-      '<dt>Area</dt><dd>'+esc(e.area||'—')+'</dd><dt>Cane buying centre</dt><dd>'+esc(e.cbc||'—')+'</dd>'+
-      '<dt>Pin location</dt><dd>'+mapLink+'</dd>'+
-      '<dt>Terms</dt><dd>'+(e.agreedAt?'Agreed and signed '+esc(fmt(e.agreedAt)):'<span class="faint">Not recorded</span>')+'</dd>'+
+      '<dt>Harvester</dt><dd>'+esc(e.harvesterName||'—')+(e.harvesterCode?' <span class="faint small">('+esc(e.harvesterCode)+')</span>':'')+'</dd>'+
+      '<dt>Consent</dt><dd>'+(e.privacyConsentAt?'Data protection statement v'+esc(e.privacyVersion||'1')+' explained and consent given '+esc(fmt(e.privacyConsentAt)):'<span class="faint">Not recorded</span>')+'</dd>'+
+      '<dt>Terms</dt><dd>'+(e.agreedAt?'Undertaking v'+esc(e.termsVersion||'1')+' agreed and signed '+esc(fmt(e.agreedAt)):'<span class="faint">Not recorded</span>')+'</dd>'+
       '<dt>Captured by</dt><dd>'+who(e.createdBy)+' · '+esc(fmt(e.createdAt))+'</dd>'+
+    '</dl></div>'+
+    '<div class="card"><h3>Field and location</h3><dl class="kv">'+
+      '<dt>Plot LR No</dt><dd>'+esc(e.plotLR||'—')+'</dd>'+
+      '<dt>Acreage (polygon)</dt><dd>'+n2(e.acreage,2)+' acres · '+n2(e.acreageHa,3)+' ha</dd>'+
+      '<dt>Number of trips</dt><dd>'+esc(e.trips||'—')+'</dd>'+
+      '<dt>Area / Sublocation</dt><dd>'+esc(e.area||'—')+' / '+esc(e.sublocation||'—')+'</dd>'+
+      '<dt>Nearest CBC</dt><dd>'+esc(e.nearestCbc||'—')+(e.nearestDistanceKm!=null&&e.nearestDistanceKm!==''?' · '+n2(e.nearestDistanceKm,2)+' km linear':'')+'</dd>'+
+      '<dt>Transport zone</dt><dd>'+zoneBadge+(e.zoneOut?' <span class="flag">Beyond the last zone — GIS to review</span>':'')+'</dd>'+
+      '<dt>Delivery CBC</dt><dd>'+esc(e.cbc||'—')+(e.cbc&&e.nearestCbc&&e.cbc!==e.nearestCbc?' <span class="flag">Not the nearest CBC</span>':'')+'</dd>'+
+      '<dt>Centroid</dt><dd>'+(e.centroidLat!=null&&e.centroidLat!==''?'<a href="https://www.google.com/maps?q='+encodeURIComponent(e.centroidLat+','+e.centroidLng)+'" target="_blank" rel="noopener">'+n2(e.centroidLat,5)+', '+n2(e.centroidLng,5)+'</a>':'<span class="faint">—</span>')+'</dd>'+
+      '<dt>Polygon</dt><dd>'+(hasPoly?e.polygon.length+' vertices · <button type="button" class="linkish" id="dlGeo">download GeoJSON</button>':'<span class="flag">No polygon captured</span>')+'</dd>'+
+    '</dl>'+(hasPoly?'<div class="map ro" id="detailMap" style="margin-top:12px"></div>':'')+'</div>'+
+    '<div class="card"><h3>Bank details</h3><dl class="kv">'+
+      '<dt>Bank</dt><dd>'+esc(e.bankName||'—')+(e.bankCode?' <span class="faint small">(code '+esc(e.bankCode)+')</span>':'')+'</dd>'+
+      '<dt>Account number</dt><dd class="num">'+esc(e.bankAccount||'—')+'</dd>'+
+      '<dt>Account name</dt><dd>'+esc(e.bankAccountName||'—')+'</dd>'+
+      '<dt>Branch</dt><dd>'+esc(e.bankBranch||'—')+'</dd>'+
     '</dl></div>'+
     '<div class="card"><h3>Photos and signature</h3><div class="gallery">'+gal+'</div></div>'+
     (e.check||e.zoning?'<div class="card"><h3>Processing</h3><dl class="kv">'+
       (e.check?'<dt>Data check</dt><dd>'+esc(e.check.result||'')+' by '+who(e.check.by)+' · '+esc(fmt(e.check.at))+(e.check.erpRef?'<br>ERP reference: '+esc(e.check.erpRef):'')+(e.check.note?'<br><span class="muted">'+esc(e.check.note)+'</span>':'')+'</dd>':'')+
-      (e.zoning?'<dt>Zoning</dt><dd>'+(e.zoning.inspected?'Inspected · ':'Not yet inspected · ')+(e.zoning.polygonReceived?'Polygon received':'Polygon pending')+(e.zoning.zone?'<br>Zone '+esc(e.zoning.zone):'')+(e.zoning.cbc?' · CBC '+esc(e.zoning.cbc):'')+(e.zoning.linearDistance!==''&&e.zoning.linearDistance!=null?' · '+esc(e.zoning.linearDistance)+' km':'')+(e.zoning.note?'<br><span class="muted">'+esc(e.zoning.note)+'</span>':'')+(e.zoning.by?'<br><span class="faint small">Last updated by '+who(e.zoning.by)+' · '+esc(fmt(e.zoning.at))+'</span>':'')+'</dd>':'')+
+      (e.zoning?'<dt>Zoning</dt><dd>'+(z.inspected?'Inspected · ':'Not yet inspected · ')+(z.polygonQc?'Polygon QC done':'Polygon QC pending')+(z.zone?'<br>Zone '+esc(z.zone):'')+(z.cbc?' · CBC '+esc(z.cbc):'')+(z.linearDistance!=null&&z.linearDistance!==''?' · '+esc(z.linearDistance)+' km':'')+(z.note?'<br><span class="muted">'+esc(z.note)+'</span>':'')+(z.by?'<br><span class="faint small">Last updated by '+who(z.by)+' · '+esc(fmt(z.at))+'</span>':'')+'</dd>':'')+
     '</dl></div>':'')+
     '<div class="card"><h3>History</h3><ul class="hist">'+(hist||'<li><span class="faint">No history</span></li>')+'</ul></div>';
 }
 function actionPanel(e){
-  const mine=e.createdBy===S.me.username;
-  let h='';
+  const mine=e.createdBy===S.me.username; let h='';
   if(((hasRole('scout')&&mine)||isAdmin())&&(e.status==='returned'||e.status==='submitted')){
     h+='<div class="card"><h3>'+(e.status==='returned'?'Correct and resubmit':'Edit entry')+'</h3><p class="small muted">'+(e.status==='returned'?'Fix what the data checker flagged, then resubmit.':'You can still edit this entry until it has been checked.')+'</p><button class="btn primary" id="editEntry">'+(e.status==='returned'?'Correct entry':'Edit entry')+'</button></div>';
   }
-  if(hasRole('checker')&&e.status==='submitted'){
-    h+='<div class="card"><h3>Data check</h3><p class="small muted">Compare the details against the ID photos and the signed undertaking. Then push to the ERP, return to the scout with a note, or reject.</p>'+
-      '<div class="field"><label>ERP reference (optional)</label><input id="erpRef" placeholder="e.g. farmer/contract code from the ERP"></div>'+
+  if((hasRole('checker')||isAdmin())&&e.status==='submitted'){
+    h+='<div class="card"><h3>Data check</h3><p class="small muted">Compare the details against the ID photos, the bank card photo and the signed undertaking. Then push to the ERP, return to the scout with a note, or reject.</p>'+
+      '<div class="field"><label>ERP reference (optional)</label><input id="erpRef" placeholder="e.g. farmer/contract code from Synergy Bravo"></div>'+
       '<div class="field"><label>Note (required when returning or rejecting)</label><textarea id="checkNote" placeholder="What needs correcting?"></textarea></div>'+
       '<div class="actions"><button class="btn primary" id="doPush">Mark pushed to ERP</button><button class="btn warn" id="doReturn">Return to scout</button><button class="btn danger" id="doReject">Reject</button></div></div>';
   }
-  if(hasRole('permits')&&e.status==='pushed'){
-    h+='<div class="card"><h3>Issue permit</h3><p class="small muted">Generate the permit in the ERP, then enter its number here.</p>'+
-      '<div class="field"><label>Permit number <span class="req">*</span></label><input id="permitNo" placeholder="Permit number from the ERP" autocomplete="off"></div>'+
-      '<button class="btn primary" id="doPermit">Record permit number</button></div>';
+  if((hasRole('permits')||isAdmin())&&e.status==='pushed'){
+    h+='<div class="card"><h3>Open permit</h3><p class="small muted">Open the permit in the ERP, then enter its number and the CCS clips issued.</p>'+
+      '<div class="grid two"><div class="field"><label>Permit number <span class="req">*</span></label><input id="permitNo" placeholder="Permit number from the ERP" autocomplete="off"></div>'+
+      '<div class="field"><label>CCS clips</label><input id="ccsClips" placeholder="e.g. 12 clips / serials 0451–0462" autocomplete="off"></div></div>'+
+      '<button class="btn primary" id="doPermit">Record permit</button></div>';
   }
-  if(hasRole('zoning')&&e.status==='permit_issued'){
-    const z=e.zoning||{};
-    h+='<div class="card"><h3>Inspection and zoning</h3><p class="small muted">Confirm the field was inspected and the polygon received, then assign the zone, CBC and linear distance.</p>'+
+  if((hasRole('zoning')||isAdmin())&&e.status==='permit_issued'){
+    const z=e.zoning||{}; const zz=zoneFor(e.nearestDistanceKm);
+    h+='<div class="card"><h3>GIS quality control and zoning</h3><p class="small muted">The values below were computed from the scout’s polygon (centroid to nearest CBC, '+esc(cfg().zoneIntervalKm||3)+' km bands). Confirm the field was inspected and the polygon checked, correct anything that is wrong, then close.</p>'+
       '<label class="check"><input type="checkbox" id="zInspected"'+(z.inspected?' checked':'')+'><span>Field inspected</span></label>'+
-      '<label class="check"><input type="checkbox" id="zPolygon"'+(z.polygonReceived?' checked':'')+'><span>Polygon received and mapped</span></label>'+
+      '<label class="check"><input type="checkbox" id="zPolygon"'+(z.polygonQc?' checked':'')+'><span>Polygon reviewed in GIS (shape, size and location are acceptable)</span></label>'+
       '<div class="grid three">'+
-      '<div class="field"><label>Zone <span class="req">*</span></label><input id="zZone" list="dlZones" value="'+esc(z.zone||'')+'" autocomplete="off"><datalist id="dlZones">'+(S.config.zones||[]).map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
-      '<div class="field"><label>CBC <span class="req">*</span></label>'+cbcSelect('zCbc',null,z.cbc||e.cbc||'',true)+'</div>'+
-      '<div class="field"><label>Linear distance (km) <span class="req">*</span></label><input id="zDist" type="number" step="0.01" min="0" inputmode="decimal" value="'+esc(z.linearDistance!=null?z.linearDistance:'')+'"></div>'+
+      '<div class="field"><label>Zone <span class="req">*</span></label><select id="zZone">'+zoneOptions(z.zone||e.zone||'')+'</select>'+(e.zoneOut?'<div class="hint" style="color:var(--red)">Computed: '+esc(e.zone)+' ('+n2(e.nearestDistanceKm,2)+' km).</div>':'<div class="hint">Computed: '+esc(e.zone||'—')+'</div>')+'</div>'+
+      '<div class="field"><label>CBC <span class="req">*</span></label>'+cbcSelect('zCbc',null,z.cbc||e.nearestCbc||e.cbc||'',true)+'<div class="hint">Nearest: '+esc(e.nearestCbc||'—')+'</div></div>'+
+      '<div class="field"><label>Linear distance (km) <span class="req">*</span></label><input id="zDist" type="number" step="0.01" min="0" inputmode="decimal" value="'+esc(z.linearDistance!=null&&z.linearDistance!==''?z.linearDistance:(e.nearestDistanceKm!=null?e.nearestDistanceKm:''))+'"><div class="hint">Max for zone '+esc(zz.zone||'')+': '+esc(zz.maxKm)+' km total</div></div>'+
       '</div>'+
       '<div class="field"><label>Note (optional)</label><textarea id="zNote">'+esc(z.note||'')+'</textarea></div>'+
       '<div class="actions"><button class="btn" id="zSave">Save progress</button><button class="btn primary" id="zDone">Mark zoning complete</button></div></div>';
   }
   return h;
+}
+function zoneOptions(cur){
+  const list=(cfg().zones||DEFAULT_CONFIG.zones).slice(); if(cur&&!list.includes(cur)) list.push(cur);
+  return '<option value="">Select zone</option>'+list.map(x=>'<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
+}
+function cbcSelect(id,name,current,required){
+  const list=activeCbcs().map(c=>c.name); if(current&&!list.includes(current)) list.unshift(current);
+  if(!list.length) return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+' disabled><option value="">No CBCs set up yet</option></select><div class="hint">Ask an administrator to add the cane buying centres under Admin, CBCs.</div>';
+  return '<select id="'+id+'"'+(name?' name="'+name+'"':'')+(required?' required':'')+'><option value=""'+(current?'':' selected')+'>Select a CBC</option>'+list.map(x=>'<option value="'+esc(x)+'"'+(x===current?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>';
 }
 function bindDetail(){
   $('#back').addEventListener('click',()=>{ S.view='list'; S.detailId=null; render(); });
@@ -907,95 +970,236 @@ function bindDetail(){
   on('#doPermit',()=>issuePermit(e));
   on('#zSave',()=>zoneAction(e,false));
   on('#zDone',()=>zoneAction(e,true));
+  on('#dlGeo',()=>downloadGeoJSON(e));
+  if($('#detailMap')&&e.polygon&&e.polygon.length>=3) showPolygonMap('detailMap',e.polygon,e.nearestCbc);
 }
+function downloadGeoJSON(e){
+  const ring=e.polygon.map(p=>[Number(p[1]),Number(p[0])]); ring.push(ring[0]);
+  const gj={type:'FeatureCollection',features:[{type:'Feature',properties:{id:e.id,farmer:e.farmerName,idNumber:e.idNumber,plotLR:e.plotLR,acres:e.acreage,ha:e.acreageHa,nearestCbc:e.nearestCbc,zone:e.zone,distanceKm:e.nearestDistanceKm,status:e.status,permit:(e.permit&&e.permit.number)||''},geometry:{type:'Polygon',coordinates:[ring]}}]};
+  saveFile(JSON.stringify(gj,null,1),'field-'+(e.plotLR||e.id).replace(/[^\w.-]+/g,'_')+'.geojson','application/geo+json');
+}
+function saveFile(text,name,type){ const b=new Blob([text],{type:type||'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
+function applyUpdated(entry){ const i=S.entries.findIndex(x=>x.id===entry.id); if(i>=0) S.entries[i]=entry; else S.entries.unshift(entry); }
 async function guard(fn){ if(S.busy) return; S.busy=true; try{ await fn(); }catch(err){ toast('Could not save: '+errMsg(err)); } finally{ S.busy=false; } }
-function afterAction(r,msg){ mergeEntries([r.entry]); toast(msg); S.view='list'; S.detailId=null; render(); }
 function checkAction(e,result){
   const note=($('#checkNote')||{}).value||'', erpRef=($('#erpRef')||{}).value||'';
   if(result!=='pushed'&&!note.trim()){ toast('Add a note so the scout knows what to fix.'); $('#checkNote').focus(); return; }
   const label={pushed:'Pushed to ERP',returned:'Returned to scout',rejected:'Rejected'}[result];
   if(result==='rejected'&&!confirm('Reject this entry? The scout will see it as rejected.')) return;
-  guard(async()=>{ const r=await api('check',{id:e.id,result:result,note:note.trim(),erpRef:erpRef.trim()}); afterAction(r,label); });
+  guard(async()=>{ const d=await api('checkEntry',{id:e.id,result:result,note:note.trim(),erpRef:erpRef.trim()}); applyUpdated(d.entry); toast(label); S.view='list'; S.detailId=null; renderTabs(); render(); });
 }
 function issuePermit(e){
-  const no=($('#permitNo').value||'').trim();
+  const no=($('#permitNo').value||'').trim(), clips=($('#ccsClips').value||'').trim();
   if(!no){ toast('Enter the permit number first.'); $('#permitNo').focus(); return; }
   const dup=S.entries.find(x=>x.id!==e.id&&x.permit&&String(x.permit.number).toLowerCase()===no.toLowerCase());
   if(dup&&!confirm('Permit '+no+' is already recorded for '+(dup.farmerName||'another farmer')+'. Record it here as well?')) return;
-  guard(async()=>{ const r=await api('permit',{id:e.id,number:no}); afterAction(r,'Permit '+no+' recorded'); });
+  guard(async()=>{ const d=await api('permitEntry',{id:e.id,permitNumber:no,ccsClips:clips}); applyUpdated(d.entry); toast('Permit '+no+' recorded'); S.view='list'; S.detailId=null; renderTabs(); render(); });
 }
 function zoneAction(e,complete){
-  const z={ inspected:$('#zInspected').checked, polygonReceived:$('#zPolygon').checked, zone:$('#zZone').value.trim(), cbc:$('#zCbc').value.trim(), linearDistance:$('#zDist').value===''?'':Number($('#zDist').value), note:$('#zNote').value.trim() };
+  const z={inspected:$('#zInspected').checked,polygonQc:$('#zPolygon').checked,zone:$('#zZone').value.trim(),cbc:$('#zCbc').value.trim(),linearDistance:$('#zDist').value===''?null:Number($('#zDist').value),note:$('#zNote').value.trim()};
   if(complete){
-    const missing=[]; if(!z.inspected) missing.push('field inspected'); if(!z.polygonReceived) missing.push('polygon received'); if(!z.zone) missing.push('zone'); if(!z.cbc) missing.push('CBC'); if(z.linearDistance===''||isNaN(z.linearDistance)) missing.push('linear distance');
+    const missing=[]; if(!z.inspected) missing.push('field inspected'); if(!z.polygonQc) missing.push('polygon reviewed'); if(!z.zone) missing.push('zone'); if(!z.cbc) missing.push('CBC'); if(z.linearDistance==null||isNaN(z.linearDistance)) missing.push('linear distance');
     if(missing.length){ toast('Still needed: '+missing.join(', ')); return; }
   }
-  guard(async()=>{ const r=await api('zone',{id:e.id,zoning:z,complete:complete}); afterAction(r,complete?'Zoning complete':'Progress saved'); });
+  guard(async()=>{ const d=await api('zoneEntry',{id:e.id,zoning:z,complete:complete}); applyUpdated(d.entry); toast(complete?'Zoning complete':'Progress saved'); S.view='list'; S.detailId=null; renderTabs(); render(); });
+}
+
+/* ---------- maps ---------- */
+const MAPS={};
+function destroyMaps(){ Object.keys(MAPS).forEach(k=>{ const m=MAPS[k]; delete MAPS[k]; try{ m.stop(); }catch(e){} try{ m.remove(); }catch(e){} }); }
+function later(id,fn){ setTimeout(()=>{ if(MAPS[id]) fn(MAPS[id]); },60); }
+function baseLayers(){
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
+  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+  return {Satellite:sat,Streets:osm};
+}
+function homeView(){ const c=activeCbcs().filter(x=>x.lat!=null); if(!c.length) return {center:[-1.05,34.65],zoom:11}; const la=c.reduce((s,x)=>s+Number(x.lat),0)/c.length,ln=c.reduce((s,x)=>s+Number(x.lng),0)/c.length; return {center:[la,ln],zoom:11}; }
+function makeMap(id){
+  if(typeof L==='undefined'){ const el=document.getElementById(id); if(el) el.innerHTML='<div class="center small">The map library could not load. Check the connection and reload.</div>'; return null; }
+  const hv=homeView(); const layers=baseLayers();
+  const m=L.map(id,{center:hv.center,zoom:hv.zoom,layers:[layers.Satellite],zoomControl:true,tap:false});
+  L.control.layers(layers,null,{position:'topright'}).addTo(m);
+  m.attributionControl.setPrefix('');
+  MAPS[id]=m; return m;
+}
+function cbcMarkers(m,near){
+  activeCbcs().forEach(c=>{ if(c.lat==null) return; L.marker([Number(c.lat),Number(c.lng)],{icon:L.divIcon({className:'',html:'<div class="cbcpin'+(c.name===near?' near':'')+'">'+esc(c.name)+'</div>',iconSize:[0,0]}),interactive:false,keyboard:false}).addTo(m); });
+}
+function showPolygonMap(id,pts,near){
+  const m=makeMap(id); if(!m) return;
+  const poly=L.polygon(pts.map(p=>[Number(p[0]),Number(p[1])]),{color:'#2E7D4F',weight:3,fillOpacity:.25}).addTo(m);
+  cbcMarkers(m,near);
+  const c=centroid(pts); const cb=activeCbcs().find(x=>x.name===near);
+  if(c&&cb&&cb.lat!=null) L.polyline([c,[Number(cb.lat),Number(cb.lng)]],{color:'#B8701A',weight:2,dashArray:'6 6'}).addTo(m);
+  const b=poly.getBounds(); if(cb&&cb.lat!=null) b.extend([Number(cb.lat),Number(cb.lng)]);
+  m.fitBounds(b.pad(0.2),{animate:false});
+  later(id,x=>x.invalidateSize());
+}
+
+/* editable polygon on the capture form */
+let PE=null; // polygon editor
+function polyEditor(id){
+  const d=S.draft; const m=makeMap(id); if(!m) return;
+  const st={m:m,markers:[],line:null,poly:null,link:null,drawing:false,watch:null};
+  PE=st;
+  cbcMarkers(m,'');
+  const sync=()=>{
+    const pts=st.markers.map(k=>{ const ll=k.getLatLng(); return [+ll.lat.toFixed(7),+ll.lng.toFixed(7)]; });
+    d.polygon=pts;
+    if(st.poly){ m.removeLayer(st.poly); st.poly=null; } if(st.line){ m.removeLayer(st.line); st.line=null; } if(st.link){ m.removeLayer(st.link); st.link=null; }
+    if(pts.length>=3) st.poly=L.polygon(pts,{color:'#2E7D4F',weight:3,fillOpacity:.25,interactive:false}).addTo(m);
+    else if(pts.length===2) st.line=L.polyline(pts,{color:'#2E7D4F',weight:3,dashArray:'4 6',interactive:false}).addTo(m);
+    st.markers.forEach((k,i)=>k.setIcon(L.divIcon({className:'',html:'<div class="vtx'+(i===0?' first':'')+'"></div>',iconSize:[0,0]})));
+    const g=computeGeo(pts); Object.assign(d,{geo:g});
+    if(g.centroid&&g.nearestCbc){ const cb=activeCbcs().find(x=>x.name===g.nearestCbc); if(cb) st.link=L.polyline([g.centroid,[Number(cb.lat),Number(cb.lng)]],{color:'#B8701A',weight:2,dashArray:'6 6',interactive:false}).addTo(m); }
+    if(!d.cbcTouched){ d.cbc=g.nearestCbc||d.cbc; const sel=$('#f_cbc'); if(sel&&g.nearestCbc){ sel.value=g.nearestCbc; } }
+    delete d.errors.polygon; const box=$('#mapBox'); if(box) box.classList.remove('err');
+    renderGeoSummary();
+  };
+  const addPt=(lat,lng)=>{
+    const k=L.marker([lat,lng],{draggable:true,icon:L.divIcon({className:'',html:'<div class="vtx"></div>',iconSize:[0,0]})}).addTo(m);
+    k.on('drag',sync); k.on('dragend',sync);
+    k.on('click',()=>{ if(!st.drawing&&confirm('Remove this corner?')){ m.removeLayer(k); st.markers=st.markers.filter(x=>x!==k); sync(); } });
+    st.markers.push(k); sync();
+  };
+  st.addPt=addPt; st.sync=sync;
+  m.on('click',ev=>{ if(st.drawing) addPt(ev.latlng.lat,ev.latlng.lng); });
+  if(d.polygon&&d.polygon.length){ d.polygon.forEach(p=>addPt(Number(p[0]),Number(p[1]))); m.fitBounds(L.latLngBounds(d.polygon).pad(0.3),{animate:false}); }
+  else if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(p=>{ if(MAPS[id]) m.setView([p.coords.latitude,p.coords.longitude],17); },()=>{},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }
+  later(id,x=>x.invalidateSize());
+  renderGeoSummary();
+}
+function renderGeoSummary(){
+  const box=$('#geoSum'); if(!box) return; const d=S.draft; const g=d.geo||computeGeo(d.polygon||[]); const n=(d.polygon||[]).length;
+  const unitMain=cfg().acreageUnit==='ha'?[n2(g.ha,3),'hectares']:[n2(g.acres,2),'acres'];
+  const z=g.zone?'<span class="zone'+(g.zoneOut?' out':'')+'">'+esc(g.zone)+'</span>':'—';
+  box.innerHTML='<div class="s"><div class="v">'+n+'</div><div class="l">Corners</div></div>'+
+    '<div class="s"><div class="v">'+(n>=3?unitMain[0]:'—')+'</div><div class="l">'+unitMain[1]+(n>=3?' · '+(cfg().acreageUnit==='ha'?n2(g.acres,2)+' ac':n2(g.ha,3)+' ha'):'')+'</div></div>'+
+    '<div class="s"><div class="v" style="font-size:15px">'+(g.nearestCbc?esc(g.nearestCbc):'—')+'</div><div class="l">Nearest CBC'+(g.nearestKm!=null?' · '+n2(g.nearestKm,2)+' km':'')+'</div></div>'+
+    '<div class="s"><div class="v">'+z+'</div><div class="l">Transport zone'+(g.zoneOut?' · beyond last zone':'')+'</div></div>';
+  const msg=$('#polyMsg'); if(msg) msg.textContent=n<3?'Add at least 3 corners to close the field boundary.':(g.nearestCbc?'':'No CBC coordinates set up yet — the zone cannot be computed.');
+}
+function bindMapTools(){
+  const d=S.draft; const st=PE; if(!st) return;
+  const drawBtn=$('#mDraw'); const gpsBtn=$('#mGps'); const walkBtn=$('#mWalk');
+  drawBtn.addEventListener('click',()=>{ st.drawing=!st.drawing; drawBtn.classList.toggle('on',st.drawing); st.m.getContainer().style.cursor=st.drawing?'crosshair':''; $('#polyHint').textContent=st.drawing?'Tap each corner of the field on the map. Tap “Tap corners” again when done. Drag a corner to adjust it; tap a corner to remove it.':'Choose how to capture the boundary: tap the corners on the satellite image, or walk the boundary adding your GPS position at each corner.'; });
+  gpsBtn.addEventListener('click',()=>{
+    if(!navigator.geolocation){ toast('GPS is not available on this device.'); return; }
+    gpsBtn.disabled=true; gpsBtn.innerHTML='<span class="spin"></span>';
+    navigator.geolocation.getCurrentPosition(p=>{ st.addPt(p.coords.latitude,p.coords.longitude); st.m.setView([p.coords.latitude,p.coords.longitude],Math.max(st.m.getZoom(),17)); toast('Corner added (±'+Math.round(p.coords.accuracy)+' m)'); gpsBtn.disabled=false; gpsBtn.innerHTML=ICON.gps+'Add GPS corner'; },
+      err=>{ toast(err.code===1?'Location permission was refused.':'Could not get a GPS fix.'); gpsBtn.disabled=false; gpsBtn.innerHTML=ICON.gps+'Add GPS corner'; },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  });
+  walkBtn.addEventListener('click',()=>{
+    if(!navigator.geolocation){ toast('GPS is not available on this device.'); return; }
+    if(st.watch!=null){ navigator.geolocation.clearWatch(st.watch); st.watch=null; walkBtn.classList.remove('on'); walkBtn.textContent='Auto-walk'; return; }
+    let last=null;
+    st.watch=navigator.geolocation.watchPosition(p=>{ const here=[p.coords.latitude,p.coords.longitude]; if(p.coords.accuracy>25) return; if(last&&haversineKm(last,here)*1000<8) return; last=here; st.addPt(here[0],here[1]); st.m.setView(here,Math.max(st.m.getZoom(),17)); },()=>{},{enableHighAccuracy:true,maximumAge:0});
+    walkBtn.classList.add('on'); walkBtn.textContent='Stop auto-walk'; toast('Walking the boundary: a corner is added every ~8 m. Tap again to stop.');
+  });
+  $('#mUndo').addEventListener('click',()=>{ const k=st.markers.pop(); if(k){ st.m.removeLayer(k); st.sync(); } });
+  $('#mClear').addEventListener('click',()=>{ if(!st.markers.length||confirm('Clear the whole boundary?')){ st.markers.forEach(k=>st.m.removeLayer(k)); st.markers=[]; st.sync(); } });
+  $('#mFit').addEventListener('click',()=>{ if(st.markers.length) st.m.fitBounds(L.latLngBounds(st.markers.map(k=>k.getLatLng())).pad(0.3)); else { const hv=homeView(); st.m.setView(hv.center,hv.zoom); } });
+  $('#mImport').addEventListener('change',async ev=>{
+    const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+    try{ const pts=await parseBoundaryFile(f); if(pts.length<3) throw new Error('No polygon found in that file.'); st.markers.forEach(k=>st.m.removeLayer(k)); st.markers=[]; pts.forEach(p=>st.addPt(p[0],p[1])); st.m.fitBounds(L.latLngBounds(pts).pad(0.3)); toast(pts.length+' corners imported'); }
+    catch(e){ toast(errMsg(e)); }
+    ev.target.value='';
+  });
+}
+async function parseBoundaryFile(file){
+  const text=await file.text(); const name=file.name.toLowerCase();
+  const simplify=pts=>{ if(pts.length>2){ const a=pts[0],b=pts[pts.length-1]; if(a[0]===b[0]&&a[1]===b[1]) pts.pop(); } return pts; };
+  if(name.endsWith('.geojson')||name.endsWith('.json')||text.trim()[0]==='{'){
+    const j=JSON.parse(text); let geom=null;
+    const walk=o=>{ if(!o||geom) return; if(o.type==='Polygon'||o.type==='MultiPolygon') geom=o; else if(o.geometry) walk(o.geometry); else if(o.features) o.features.forEach(walk); else if(o.geometries) o.geometries.forEach(walk); };
+    walk(j); if(!geom) throw new Error('No polygon in that GeoJSON.');
+    const ring=geom.type==='Polygon'?geom.coordinates[0]:geom.coordinates[0][0];
+    return simplify(ring.map(c=>[Number(c[1]),Number(c[0])]));
+  }
+  const m=text.match(/<coordinates>([\s\S]*?)<\/coordinates>/i); // KML
+  if(m){ return simplify(m[1].trim().split(/\s+/).map(t=>t.split(',')).filter(t=>t.length>=2).map(t=>[Number(t[1]),Number(t[0])])); }
+  throw new Error('Use a GeoJSON or KML file.');
 }
 
 /* ---------- capture form ---------- */
+function blankDraft(){ return {id:null,existing:null,farmerName:'',phone:'',idNumber:'',plotLR:'',trips:'',sublocation:'',area:'',cbc:'',cbcTouched:false,harvesterCode:'',polygon:[],geo:null,bankCode:'',bankName:'',bankAccount:'',bankAccountName:'',bankBranch:'',images:{},existingImages:{},agreed:false,consent:false,errors:{}}; }
 function startForm(e){
-  S.draft=e?{
-    id:e.id,existing:e,farmerName:e.farmerName||'',phone:e.phone||'',idNumber:e.idNumber||'',plotLR:e.plotLR||'',acreage:e.acreage||'',trips:e.trips==null?'':e.trips,
-    sublocation:e.sublocation||'',area:e.area||'',cbc:e.cbc||'',pin:e.pin?Object.assign({},e.pin):null,
-    images:{},existingImages:Object.assign({},e.images||{}),agreed:!!e.agreedAt,
-  }:{id:null,existing:null,farmerName:'',phone:'',idNumber:'',plotLR:'',acreage:'',trips:'',sublocation:'',area:'',cbc:'',pin:null,images:{},existingImages:{},agreed:false};
-  S.draft.errors={};
-  S.view='form'; render(); window.scrollTo(0,0);
+  const d=blankDraft();
+  if(e){ Object.assign(d,{id:e.id,existing:e,farmerName:e.farmerName||'',phone:e.phone||'',idNumber:e.idNumber||'',plotLR:e.plotLR||'',trips:e.trips||'',sublocation:e.sublocation||'',area:e.area||'',cbc:e.cbc||'',cbcTouched:!!(e.cbc&&e.cbc!==e.nearestCbc),harvesterCode:e.harvesterCode||'',polygon:(e.polygon||[]).slice(),bankCode:e.bankCode||'',bankName:e.bankName||'',bankAccount:e.bankAccount||'',bankAccountName:e.bankAccountName||'',bankBranch:e.bankBranch||'',existingImages:Object.assign({},e.images||{}),agreed:!!e.agreedAt,consent:!!e.privacyConsentAt}); d.geo=computeGeo(d.polygon); }
+  S.draft=d; S.view='form'; render(); window.scrollTo(0,0);
 }
-const CAM_ICON='<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
-const ID_ICON='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M14 10h4M14 14h4"/></svg>';
 function photoTile(kind,label,capture,icon){
   const d=S.draft; const err=d.errors[kind]?' err':'';
   const fresh=d.images[kind], old=d.existingImages[kind];
-  const src=fresh?fresh.preview:(old?imgSrc(old):null);
   const has=!!(fresh||old);
   return '<div class="photo'+(has?' has':'')+err+'" data-kind="'+kind+'">'+
-    (has?'<img alt="'+esc(label)+'" '+(src?'src="'+esc(src)+'"':'')+(!fresh&&old?' data-ref="'+esc(old)+'"':'')+'>':icon+'<div class="t">'+esc(label)+'</div><div class="faint small">Tap to take photo</div>')+
+    (has?(fresh?'<img alt="'+esc(label)+'" src="'+esc(fresh.preview)+'">':imgTag(old,label)):icon+'<div class="t">'+esc(label)+'</div><div class="faint small">Tap to take photo</div>')+
     '<input type="file" accept="image/*" '+(capture?'capture="'+capture+'"':'')+' aria-label="'+esc(label)+'">'+
     (has?'<div class="cap"><span>'+esc(label)+'</span><button type="button" data-retake="'+kind+'">Retake</button></div>':'')+
     '</div>';
 }
-function photosHtml(){ return photoTile('idFront','ID front','environment',ID_ICON)+photoTile('idBack','ID back','environment',ID_ICON)+photoTile('farmerPhoto','Farmer photo','user',CAM_ICON); }
+function bankFor(code){ return S.banks.find(b=>String(b.code)===String(code)&&b.active!==false)||S.banks.find(b=>String(b.code)===String(code)); }
 function viewForm(){
-  const d=S.draft; const cfg=S.config;
+  const d=S.draft; const c=cfg();
   const f=(name,label,opts)=>{
     opts=opts||{}; const err=d.errors[name];
     const dl=opts.list?'<datalist id="dl_'+name+'">'+opts.list.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist>':'';
     return '<div class="field'+(err?' err':'')+'"><label for="f_'+name+'">'+label+(opts.req!==false?' <span class="req">*</span>':'')+'</label>'+
-      '<input id="f_'+name+'" name="'+name+'" type="'+(opts.type||'text')+'" '+(opts.inputmode?'inputmode="'+opts.inputmode+'" ':'')+(opts.step?'step="'+opts.step+'" min="0" ':'')+(opts.list?'list="dl_'+name+'" ':'')+'value="'+esc(d[name])+'" autocomplete="off" placeholder="'+esc(opts.ph||'')+'">'+dl+
-      (opts.hint?'<div class="hint">'+opts.hint+'</div>':'')+(err?'<div class="errmsg">'+esc(err)+'</div>':'')+'</div>';
+      '<input id="f_'+name+'" name="'+name+'" type="'+(opts.type||'text')+'" '+(opts.inputmode?'inputmode="'+opts.inputmode+'" ':'')+(opts.step?'step="'+opts.step+'" min="0" ':'')+(opts.list?'list="dl_'+name+'" ':'')+(opts.maxlength?'maxlength="'+opts.maxlength+'" ':'')+(opts.pattern?'pattern="'+opts.pattern+'" ':'')+'value="'+esc(d[name])+'" autocomplete="off" placeholder="'+esc(opts.ph||'')+'">'+dl+
+      (opts.hint?'<div class="hint" id="h_'+name+'">'+opts.hint+'</div>':'')+(err?'<div class="errmsg">'+esc(err)+'</div>':'')+'</div>';
   };
-  const pin=d.pin;
-  return '<button class="back" id="cancelForm"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>'+(d.id?'Back to entry':'Back to my entries')+'</button>'+
+  const hv=activeHarvesters(); if(d.harvesterCode&&!hv.find(h=>h.code===d.harvesterCode)){ const h=S.harvesters.find(x=>x.code===d.harvesterCode); if(h) hv.unshift(h); }
+  const harvSel='<div class="field'+(d.errors.harvesterCode?' err':'')+'"><label for="f_harvester">Harvester'+(c.requireHarvester!==false?' <span class="req">*</span>':'')+'</label>'+
+    (hv.length?'<select id="f_harvester" name="harvesterCode"><option value=""'+(d.harvesterCode?'':' selected')+'>Select the harvester</option>'+hv.map(h=>'<option value="'+esc(h.code)+'"'+(h.code===d.harvesterCode?' selected':'')+'>'+esc(h.name)+' ('+esc(h.code)+')</option>').join('')+'</select>':'<select id="f_harvester" disabled><option>No harvesters onboarded yet</option></select><div class="hint">Ask an administrator to onboard harvesters under Admin, Harvesters.</div>')+
+    (d.errors.harvesterCode?'<div class="errmsg">'+esc(d.errors.harvesterCode)+'</div>':'')+'</div>';
+  const banks=activeBanks(); const bk=bankFor(d.bankCode);
+  const bankSel='<div class="field'+(d.errors.bankCode?' err':'')+'"><label for="f_bank">Bank name <span class="req">*</span></label>'+
+    (banks.length?'<select id="f_bank" name="bankCode"><option value=""'+(d.bankCode?'':' selected')+'>Select the bank</option>'+banks.map(b=>'<option value="'+esc(b.code)+'"'+(String(b.code)===String(d.bankCode)?' selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select>':'<select id="f_bank" disabled><option>No banks set up yet</option></select>')+
+    (d.errors.bankCode?'<div class="errmsg">'+esc(d.errors.bankCode)+'</div>':'')+'</div>';
+  const acctLen=bk?Number(bk.acctLength)||0:0;
+  return '<button class="back" id="cancelForm">'+ICON.back+(d.id?'Back to entry':'Back to my entries')+'</button>'+
     '<h2>'+(d.id?'Correct entry':'New farmer entry')+'</h2><p class="muted">Capture everything needed for the harvest permit while you are with the farmer.</p>'+
     (d.existing&&d.existing.status==='returned'&&d.existing.check&&d.existing.check.note?'<div class="note red" style="margin-bottom:12px">Returned: '+esc(d.existing.check.note)+'</div>':'')+
     '<form id="entryForm" novalidate>'+
     '<div class="section"><span class="n">1</span><h3>Farmer</h3></div><div class="card">'+
       f('farmerName','Farmer name',{ph:'As on the national ID'})+
       '<div class="grid two">'+f('phone','Phone number',{type:'tel',inputmode:'tel',ph:'07…'})+f('idNumber','ID number',{inputmode:'numeric',ph:'National ID number'})+'</div>'+
+      harvSel+
     '</div>'+
-    '<div class="section"><span class="n">2</span><h3>Field and location</h3></div><div class="card">'+
-      '<div class="grid two">'+f('plotLR','Plot LR No',{ph:'Land reference number'})+f('acreage','Estimated acreage ('+esc(cfg.acreageUnit)+')',{type:'number',inputmode:'decimal',step:'0.01'})+'</div>'+
-      '<div class="grid two">'+f('trips','Number of trips',{type:'number',inputmode:'numeric',step:'1',hint:'Estimated loads to the mill',req:false})+
-      '<div class="field'+(d.errors.cbc?' err':'')+'"><label for="f_cbc">Cane buying centre <span class="req">*</span></label>'+cbcSelect('f_cbc','cbc',d.cbc,true)+(d.errors.cbc?'<div class="errmsg">'+esc(d.errors.cbc)+'</div>':'')+'</div></div>'+
-      '<div class="grid two">'+f('area','Area',{list:cfg.areas||[]})+f('sublocation','Sublocation',{list:cfg.sublocations||[]})+'</div>'+
-      '<div class="field'+(d.errors.pin?' err':'')+'"><label>Pin location <span class="req">*</span></label>'+
-        '<div class="row"><button type="button" class="btn" id="gps"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>Use my GPS position</button>'+
-        '<span id="gpsMsg" class="small muted">'+(pin?'Captured '+Number(pin.lat).toFixed(5)+', '+Number(pin.lng).toFixed(5)+(pin.accuracy?' (±'+Math.round(pin.accuracy)+' m)':''):'Stand at the plot and tap the button')+'</span></div>'+
-        '<div class="grid two" style="margin-top:8px"><input id="f_lat" type="number" step="any" inputmode="decimal" placeholder="Latitude" value="'+(pin?esc(pin.lat):'')+'" aria-label="Latitude"><input id="f_lng" type="number" step="any" inputmode="decimal" placeholder="Longitude" value="'+(pin?esc(pin.lng):'')+'" aria-label="Longitude"></div>'+
-        (d.errors.pin?'<div class="errmsg">'+esc(d.errors.pin)+'</div>':'<div class="hint">Or type the coordinates if GPS is unavailable.</div>')+'</div>'+
+    '<div class="section"><span class="n">2</span><h3>Field boundary and location</h3></div><div class="card">'+
+      '<div class="grid two">'+f('plotLR','Plot LR No',{ph:'Land reference number'})+f('trips','Number of trips',{type:'number',inputmode:'numeric',step:'1',hint:'Estimated loads to the mill',req:false})+'</div>'+
+      '<div class="grid two">'+f('area','Area',{list:c.areas||[]})+f('sublocation','Sublocation',{list:c.sublocations||[]})+'</div>'+
+      '<div class="field'+(d.errors.polygon?' err':'')+'"><label>Field polygon <span class="req">*</span></label>'+
+        '<div class="maphint" id="polyHint">Choose how to capture the boundary: tap the corners on the satellite image, or walk the boundary adding your GPS position at each corner.</div>'+
+        '<div class="map'+(d.errors.polygon?' err':'')+'" id="mapBox"></div>'+
+        '<div class="mapbar"><button type="button" class="btn sm" id="mDraw">Tap corners</button><button type="button" class="btn sm" id="mGps">'+ICON.gps+'Add GPS corner</button><button type="button" class="btn sm" id="mWalk">Auto-walk</button><button type="button" class="btn sm" id="mUndo">Undo</button><button type="button" class="btn sm" id="mClear">Clear</button><button type="button" class="btn sm" id="mFit">Fit</button><label class="btn sm" style="position:relative">Import KML/GeoJSON<input type="file" id="mImport" accept=".kml,.geojson,.json,application/json" style="position:absolute;inset:0;opacity:0;width:100%;cursor:pointer"></label></div>'+
+        '<div class="sum" id="geoSum"></div>'+
+        '<div class="hint" id="polyMsg"></div>'+
+        (d.errors.polygon?'<div class="errmsg">'+esc(d.errors.polygon)+'</div>':'')+'</div>'+
+      '<div class="field'+(d.errors.cbc?' err':'')+'"><label for="f_cbc">Delivery cane buying centre <span class="req">*</span></label>'+cbcSelect('f_cbc','cbc',d.cbc,true)+'<div class="hint">Defaults to the nearest CBC from the polygon. Change it only if the farmer delivers elsewhere; the zone is still computed to the nearest CBC.</div>'+(d.errors.cbc?'<div class="errmsg">'+esc(d.errors.cbc)+'</div>':'')+'</div>'+
     '</div>'+
-    '<div class="section"><span class="n">3</span><h3>Photos</h3></div><div class="card"><div class="photos">'+photosHtml()+'</div>'+
-    (d.errors.photos?'<div class="errmsg" style="margin-top:8px">'+esc(d.errors.photos)+'</div>':'<div class="hint" style="margin-top:8px">Photos are resized before upload to save data.</div>')+'</div>'+
-    '<div class="section"><span class="n">4</span><h3>Terms and signature</h3></div><div class="card">'+
-      '<p class="small muted">Read this undertaking to the farmer. Their name and ID number fill in from above.</p>'+
+    '<div class="section"><span class="n">3</span><h3>Bank details</h3></div><div class="card">'+
+      '<div class="grid two">'+bankSel+'<div class="field"><label>Bank code</label><div class="bankcode" id="bankCodeBox">'+(bk?'<b>'+esc(bk.code)+'</b><span class="small">auto-filled</span>':'<span class="small">Select a bank</span>')+'</div></div></div>'+
+      '<div class="grid two">'+f('bankAccount','Account number',{inputmode:'numeric',pattern:'[0-9]*',maxlength:acctLen||20,hint:bk?('Digits only · '+acctLen+' digits for '+esc(bk.name)):'Digits only'})+f('bankAccountName','Account name',{ph:'Name on the account'})+'</div>'+
+      f('bankBranch','Branch',{ph:'e.g. Migori'})+
+      '<div class="photos" style="grid-template-columns:1fr;max-width:300px">'+photoTile('bankCard','Bank card / passbook','environment',ICON.card)+'</div>'+
+      (d.errors.bankCard?'<div class="errmsg" style="margin-top:8px">'+esc(d.errors.bankCard)+'</div>':'<div class="hint" style="margin-top:8px">Photograph the side of the ATM card, passbook or bank slip that shows the account name'+(c.requireBankCard!==false?'':' (optional)')+'.</div>')+
+    '</div>'+
+    '<div class="section"><span class="n">4</span><h3>Photos</h3></div><div class="card"><div class="photos" id="idPhotos">'+
+      photoTile('idFront','ID front','environment',ICON.id)+photoTile('idBack','ID back','environment',ICON.id)+photoTile('farmerPhoto','Farmer photo','user',ICON.cam)+
+    '</div>'+(d.errors.photos?'<div class="errmsg" style="margin-top:8px">'+esc(d.errors.photos)+'</div>':'<div class="hint" style="margin-top:8px">Photos are resized before upload to save data.</div>')+'</div>'+
+    '<div class="section"><span class="n">5</span><h3>Consent, terms and signature</h3></div><div class="card">'+
+      '<p class="small muted">Explain to the farmer how their personal data (ID, photos, phone and bank details) will be used. <button type="button" class="linkish" id="privFull">Read the full statement</button></p>'+
+      '<div class="consent"><h4>Data Protection Statement (summary)</h4>Angata Sugar Mills collects these details only to register the cane field, open the harvest permit and pay for cane delivered, in line with the Data Protection Act, 2019. The data is kept securely, used for no other purpose, and not kept longer than needed. The farmer may ask to see, correct or delete their data at any time, and may complain to the Office of the Data Protection Commissioner.</div>'+
+      '<label class="check"><input type="checkbox" id="f_consent"'+(d.consent?' checked':'')+'><span>The farmer has been informed of the data protection statement and consents to the processing of their personal data, including ID, photos and bank details.</span></label>'+
+      (d.errors.consent?'<div class="errmsg">'+esc(d.errors.consent)+'</div>':'')+
+      '<hr class="hr"><p class="small muted">Read this undertaking to the farmer. Their name and ID number fill in from above.</p>'+
       '<div class="terms" id="termsBox">'+termsHtml()+'</div>'+
       '<label class="check"><input type="checkbox" id="f_agreed"'+(d.agreed?' checked':'')+'><span>The farmer has heard and agrees to this undertaking and signs below.</span></label>'+
       (d.errors.agreed?'<div class="errmsg">'+esc(d.errors.agreed)+'</div>':'')+
       '<div class="field'+(d.errors.signature?' err':'')+'" style="margin-top:6px"><label>Farmer’s signature <span class="req">*</span></label>'+
       (d.images.signature||d.existingImages.signature?
-        '<div class="sigwrap"><img class="sig" style="object-fit:contain;height:120px" alt="Signature" '+(d.images.signature?'src="'+esc(d.images.signature.preview)+'"':(imgSrc(d.existingImages.signature)?'src="'+esc(imgSrc(d.existingImages.signature))+'"':'')+' data-ref="'+esc(d.existingImages.signature)+'"')+'><button type="button" class="btn sm clr" id="sigRedo">Redo</button></div>':
+        '<div class="sigwrap">'+(d.images.signature?'<img class="sig" style="object-fit:contain;height:120px" alt="Signature" src="'+esc(d.images.signature.preview)+'">':'<img class="sig" style="object-fit:contain;height:120px" alt="Signature" data-img="'+esc(d.existingImages.signature)+'">')+'<button type="button" class="btn sm clr" id="sigRedo">Redo</button></div>':
         '<div class="sigwrap"><canvas class="sig" id="sigPad"></canvas><span class="ghost">Sign here with a finger or stylus</span><button type="button" class="btn sm clr" id="sigClear">Clear</button></div>')+
       (d.errors.signature?'<div class="errmsg">'+esc(d.errors.signature)+'</div>':'')+'</div>'+
     '</div>'+
@@ -1003,53 +1207,51 @@ function viewForm(){
     '</form>';
 }
 function termsHtml(){
-  const d=S.draft;
-  const n=d.farmerName.trim()||'……………………', i=d.idNumber.trim()||'………………';
-  return esc(TERMS).replace('{NAME}','<b>'+esc(n)+'</b>').replace('{ID}','<b>'+esc(i)+'</b>');
+  const d=S.draft; const n=d.farmerName.trim()||'……………………', i=d.idNumber.trim()||'………………';
+  return esc(cfg().termsText||DEFAULT_TERMS).replace('{NAME}','<b>'+esc(n)+'</b>').replace('{ID}','<b>'+esc(i)+'</b>');
 }
 let sig=null;
 function bindForm(){
   const d=S.draft; const form=$('#entryForm');
-  $('#cancelForm').addEventListener('click',()=>{ if(!confirm('Leave this form? The details you typed stay until you reload the page.')) return; S.view=d.id?'detail':'list'; render(); });
-  form.querySelectorAll('input[name],select[name]').forEach(inp=>{ const syncF=()=>{ d[inp.name]=inp.value; if(inp.name==='farmerName'||inp.name==='idNumber') $('#termsBox').innerHTML=termsHtml(); }; inp.addEventListener('input',syncF); inp.addEventListener('change',syncF); });
-  $('#f_agreed').addEventListener('change',ev=>{ d.agreed=ev.target.checked; });
-  const latEl=$('#f_lat'),lngEl=$('#f_lng');
-  const syncPin=()=>{ const la=parseFloat(latEl.value),ln=parseFloat(lngEl.value); d.pin=(isFinite(la)&&isFinite(ln))?{lat:la,lng:ln,accuracy:null,source:'manual'}:null; };
-  latEl.addEventListener('input',syncPin); lngEl.addEventListener('input',syncPin);
-  $('#gps').addEventListener('click',()=>{
-    const msg=$('#gpsMsg');
-    if(!navigator.geolocation){ msg.textContent='GPS is not available on this device. Type the coordinates instead.'; return; }
-    msg.innerHTML='<span class="spin"></span> Finding position…';
-    navigator.geolocation.getCurrentPosition(p=>{
-      d.pin={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,source:'gps',at:nowISO()};
-      latEl.value=p.coords.latitude.toFixed(6); lngEl.value=p.coords.longitude.toFixed(6);
-      msg.textContent='Captured '+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)+' (±'+Math.round(p.coords.accuracy)+' m)';
-    },err=>{ msg.textContent=(err.code===1?'Location permission was refused.':'Could not get a GPS fix.')+' Type the coordinates instead.'; },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  $('#cancelForm').addEventListener('click',()=>{ if(!confirm('Leave this form? What you typed will be lost.')) return; if(PE&&PE.watch!=null) navigator.geolocation.clearWatch(PE.watch); S.view=d.id?'detail':'list'; S.draft=null; render(); });
+  $('#privFull').addEventListener('click',showPrivacy);
+  form.querySelectorAll('input[name],select[name]').forEach(inp=>{
+    const sync=()=>{
+      if(inp.name==='bankAccount'){ inp.value=inp.value.replace(/\D+/g,''); }
+      d[inp.name]=inp.value;
+      if(inp.name==='farmerName'||inp.name==='idNumber') $('#termsBox').innerHTML=termsHtml();
+      if(inp.name==='cbc'){ d.cbcTouched=!!(inp.value&&d.geo&&inp.value!==d.geo.nearestCbc); }
+      if(inp.name==='bankCode'){ const b=bankFor(inp.value); d.bankName=b?b.name:''; const box=$('#bankCodeBox'); box.innerHTML=b?'<b>'+esc(b.code)+'</b><span class="small">auto-filled</span>':'<span class="small">Select a bank</span>'; const acc=$('#f_bankAccount'); const len=b?Number(b.acctLength)||0:0; acc.maxLength=len||20; const h=$('#h_bankAccount'); if(h) h.textContent=b?('Digits only · '+len+' digits for '+b.name):'Digits only'; }
+    };
+    inp.addEventListener('input',sync); inp.addEventListener('change',sync);
   });
-  bindPhotos();
+  $('#f_agreed').addEventListener('change',ev=>{ d.agreed=ev.target.checked; });
+  $('#f_consent').addEventListener('change',ev=>{ d.consent=ev.target.checked; });
+  bindPhotoInputs(form);
   const redo=$('#sigRedo'); if(redo) redo.addEventListener('click',()=>{ delete d.images.signature; delete d.existingImages.signature; refreshSig(); });
   setupSig();
+  polyEditor('mapBox'); bindMapTools();
   form.addEventListener('submit',ev=>{ ev.preventDefault(); submitEntry(); });
 }
-function bindPhotos(){
-  const d=S.draft; const wrap=document.querySelector('.photos'); if(!wrap) return;
-  wrap.querySelectorAll('.photo input[type=file]').forEach(inp=>inp.addEventListener('change',async()=>{
+function bindPhotoInputs(root){
+  const d=S.draft;
+  root.querySelectorAll('.photo input[type=file]').forEach(inp=>inp.onchange=async()=>{
     const kind=inp.closest('.photo').getAttribute('data-kind'); const file=inp.files&&inp.files[0]; if(!file) return;
-    try{ const r=await compressImage(file,1000,0.75); d.images[kind]={blob:r.blob,preview:r.dataUrl}; delete d.errors[kind]; refreshPhotos(); }
+    try{ const blob=await compressImage(file,1200,0.78); d.images[kind]={blob:blob,preview:URL.createObjectURL(blob)}; delete d.errors[kind]; refreshPhoto(kind); }
     catch(e){ toast('That image could not be read. Try again.'); }
-  }));
-  wrap.querySelectorAll('[data-retake]').forEach(b=>b.addEventListener('click',ev=>{ ev.preventDefault(); const k=b.getAttribute('data-retake'); delete d.images[k]; delete d.existingImages[k]; refreshPhotos(); }));
+  });
+  root.querySelectorAll('[data-retake]').forEach(b=>b.onclick=ev=>{ ev.preventDefault(); const k=b.getAttribute('data-retake'); delete d.images[k]; delete d.existingImages[k]; refreshPhoto(k); });
 }
-function refreshPhotos(){ const wrap=document.querySelector('.photos'); if(!wrap) return; wrap.innerHTML=photosHtml(); bindPhotos(); loadImages(); }
-function refreshSig(){
-  const wrap=document.querySelector('.sigwrap'); if(!wrap) return;
-  wrap.outerHTML='<div class="sigwrap"><canvas class="sig" id="sigPad"></canvas><span class="ghost">Sign here with a finger or stylus</span><button type="button" class="btn sm clr" id="sigClear">Clear</button></div>';
-  setupSig();
+function refreshPhoto(kind){
+  const tile=document.querySelector('.photo[data-kind="'+kind+'"]'); if(!tile) return;
+  const label={idFront:'ID front',idBack:'ID back',farmerPhoto:'Farmer photo',bankCard:'Bank card / passbook'}[kind];
+  const cap={farmerPhoto:'user'}[kind]||'environment'; const icon={farmerPhoto:ICON.cam,bankCard:ICON.card}[kind]||ICON.id;
+  const tmp=document.createElement('div'); tmp.innerHTML=photoTile(kind,label,cap,icon); const n=tmp.firstChild; tile.replaceWith(n); bindPhotoInputs(n.parentNode); loadImages();
 }
+function refreshSig(){ const wrap=document.querySelector('.sigwrap'); if(!wrap) return; wrap.outerHTML='<div class="sigwrap"><canvas class="sig" id="sigPad"></canvas><span class="ghost">Sign here with a finger or stylus</span><button type="button" class="btn sm clr" id="sigClear">Clear</button></div>'; setupSig(); }
 function setupSig(){
   const c=$('#sigPad'); if(!c){ sig=null; return; }
-  const dpr=Math.max(1,window.devicePixelRatio||1);
-  const w=c.clientWidth||320,h=c.clientHeight||170;
+  const dpr=Math.max(1,window.devicePixelRatio||1); const w=c.clientWidth||320,h=c.clientHeight||170;
   c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
   const ctx=c.getContext('2d'); ctx.scale(dpr,dpr); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
   ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#14233a';
@@ -1061,79 +1263,223 @@ function setupSig(){
   c.addEventListener('pointerup',up); c.addEventListener('pointercancel',up); c.addEventListener('pointerleave',up);
   const clr=$('#sigClear'); if(clr) clr.addEventListener('click',()=>{ ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); sig.drawn=false; delete S.draft.images.signature; const g=document.querySelector('.sigwrap .ghost'); if(g) g.style.display=''; });
 }
-function captureSig(){
-  if(!sig||!sig.drawn) return;
-  const dataUrl=sig.c.toDataURL('image/png');
-  S.draft.images.signature={preview:dataUrl,dataUrl:dataUrl,type:'image/png'}; delete S.draft.errors.signature;
-}
+function captureSig(){ if(!sig||!sig.drawn) return; const preview=sig.c.toDataURL('image/png'); sig.c.toBlob(b=>{ if(b){ S.draft.images.signature={blob:b,preview:preview}; delete S.draft.errors.signature; } },'image/png'); }
 function compressImage(file,maxDim,q){
   return new Promise((res,rej)=>{
     const url=URL.createObjectURL(file); const img=new Image();
-    img.onload=()=>{
-      let w=img.naturalWidth,h=img.naturalHeight; const s=Math.min(1,maxDim/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
-      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
-      URL.revokeObjectURL(url);
-      const dataUrl=c.toDataURL('image/jpeg',q);
-      res({dataUrl:dataUrl,type:'image/jpeg'});
-    };
+    img.onload=()=>{ let w=img.naturalWidth,h=img.naturalHeight; const s=Math.min(1,maxDim/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s); const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); URL.revokeObjectURL(url); c.toBlob(b=>b?res(b):rej(new Error('encode failed')),'image/jpeg',q); };
     img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('decode failed')); };
     img.src=url;
   });
 }
+function blobToDataUrl(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); }); }
 function validate(d){
-  const er={};
+  const er={}; const c=cfg();
   if(!d.farmerName.trim()) er.farmerName='Enter the farmer’s name.';
   if(!d.phone.trim()) er.phone='Enter a phone number.';
+  else if(!/^(\+?254|0)?[17]\d{8}$/.test(d.phone.replace(/[\s-]/g,''))) er.phone='Enter a valid Kenyan mobile number (e.g. 0712 345 678).';
   if(!d.idNumber.trim()) er.idNumber='Enter the ID number.';
+  else if(!/^\d{6,10}$/.test(d.idNumber.trim())) er.idNumber='The ID number should be 6 to 10 digits.';
+  if(c.requireHarvester!==false&&!d.harvesterCode) er.harvesterCode='Select the harvester.';
   if(!d.plotLR.trim()) er.plotLR='Enter the plot LR number.';
-  if(d.acreage===''||isNaN(Number(d.acreage))||Number(d.acreage)<=0) er.acreage='Enter the estimated acreage.';
-  if(!d.cbc.trim()) er.cbc='Select the cane buying centre.';
   if(!d.area.trim()) er.area='Enter the area.';
   if(!d.sublocation.trim()) er.sublocation='Enter the sublocation.';
-  if(!d.pin) er.pin='Capture the GPS position or type the coordinates.';
+  const g=computeGeo(d.polygon||[]);
+  if(!d.polygon||d.polygon.length<3) er.polygon='Capture the field boundary with at least 3 corners.';
+  else if(!(g.areaM2>50)) er.polygon='The polygon is too small — check the corners.';
+  else if(g.areaM2>2000000) er.polygon='The polygon is larger than 200 ha — check the corners.';
+  if(!d.cbc.trim()) er.cbc='Select the delivery CBC.';
+  if(!d.bankCode) er.bankCode='Select the bank.';
+  const bk=bankFor(d.bankCode); const acc=d.bankAccount.trim();
+  if(!acc) er.bankAccount='Enter the account number.';
+  else if(!/^\d+$/.test(acc)) er.bankAccount='Digits only.';
+  else if(bk&&Number(bk.acctLength)>0){ const L=Number(bk.acctLength); if(c.bankAcctExactLength!==false?acc.length!==L:acc.length>L) er.bankAccount=bk.name+' account numbers have '+(c.bankAcctExactLength!==false?'':'up to ')+L+' digits (you entered '+acc.length+').'; }
+  if(!d.bankAccountName.trim()) er.bankAccountName='Enter the account name.';
+  if(!d.bankBranch.trim()) er.bankBranch='Enter the branch.';
+  if(c.requireBankCard!==false&&!(d.images.bankCard||d.existingImages.bankCard)) er.bankCard='Take a photo of the bank card or passbook.';
   const missing=['idFront','idBack','farmerPhoto'].filter(k=>!(d.images[k]||d.existingImages[k]));
   if(missing.length){ er.photos='Add: '+missing.map(k=>({idFront:'ID front',idBack:'ID back',farmerPhoto:'farmer photo'})[k]).join(', ')+'.'; missing.forEach(k=>er[k]=true); }
+  if(!d.consent) er.consent='Tick to confirm the farmer was informed and consents.';
   if(!d.agreed) er.agreed='Tick to confirm the farmer agrees to the undertaking.';
-  if(!(d.images.signature||d.existingImages.signature)) er.signature='Ask the farmer to sign.';
+  if(!(d.images.signature||d.existingImages.signature)){ if(sig&&sig.drawn) captureSig(); else er.signature='Ask the farmer to sign.'; }
   return er;
 }
-function b64(dataUrl){ return dataUrl.slice(dataUrl.indexOf(',')+1); }
 async function submitEntry(){
   const d=S.draft; if(S.busy) return;
-  if(sig&&sig.drawn&&!d.images.signature) captureSig();
+  if(sig&&sig.drawn&&!d.images.signature) await new Promise(r=>{ const pv=sig.c.toDataURL('image/png'); sig.c.toBlob(b=>{ if(b) d.images.signature={blob:b,preview:pv}; r(); },'image/png'); });
   d.errors=validate(d);
-  if(Object.keys(d.errors).length){ render(); const first=document.querySelector('.err,.photo.err'); if(first) first.scrollIntoView({behavior:'smooth',block:'center'}); toast('Some details are missing.'); return; }
-  S.busy=true; const btn=$('#submitBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Uploading…';
+  if(Object.keys(d.errors).length){ render(); const first=document.querySelector('.field.err,.photo.err,.map.err'); if(first) first.scrollIntoView({behavior:'smooth',block:'center'}); toast('Some details are missing or invalid.'); return; }
+  if(PE&&PE.watch!=null){ navigator.geolocation.clearWatch(PE.watch); PE.watch=null; }
+  S.busy=true; const btn=$('#submitBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
   try{
-    const images={};
-    ['idFront','idBack','farmerPhoto','signature'].forEach(k=>{
-      if(d.images[k]) images[k]={data:b64(d.images[k].dataUrl||d.images[k].preview),type:d.images[k].type||'image/jpeg'};
-      else if(d.existingImages[k]) images[k]=d.existingImages[k];
-    });
-    const r=await api('save',{entry:{
-      id:d.id||null,farmerName:d.farmerName,phone:d.phone,idNumber:d.idNumber,plotLR:d.plotLR,acreage:d.acreage,trips:d.trips,
-      sublocation:d.sublocation,area:d.area,cbc:d.cbc,pin:d.pin,images:images,
-    }});
-    mergeEntries([r.entry]);
-    toast(d.id?'Resubmitted for data check':'Submitted for data check');
-    S.draft=null; S.view='list'; S.detailId=null; sig=null;
-    render(); window.scrollTo(0,0);
+    const isEdit=!!d.id; const id=isEdit?d.id:uid();
+    const images=Object.assign({},d.existingImages);
+    for(const [kind,label] of IMG_KINDS){
+      if(d.images[kind]&&d.images[kind].blob){ btn.innerHTML='<span class="spin"></span> Uploading '+label.toLowerCase()+'…'; const dataUrl=await blobToDataUrl(d.images[kind].blob); const r=await api('uploadImage',{entryId:id,kind:kind,dataUrl:dataUrl}); images[kind]=r.fileId; }
+    }
+    btn.innerHTML='<span class="spin"></span> Saving entry…';
+    const g=computeGeo(d.polygon); const bk=bankFor(d.bankCode); const hv=S.harvesters.find(h=>h.code===d.harvesterCode);
+    const entry={
+      id:id,farmerName:d.farmerName.trim(),phone:d.phone.trim(),idNumber:d.idNumber.trim(),plotLR:d.plotLR.trim(),
+      trips:d.trips===''?null:Number(d.trips),sublocation:d.sublocation.trim(),area:d.area.trim(),cbc:d.cbc.trim(),
+      harvesterCode:d.harvesterCode,harvesterName:hv?hv.name:'',
+      polygon:d.polygon,acreage:Math.round(g.acres*100)/100,acreageHa:Math.round(g.ha*1000)/1000,areaM2:Math.round(g.areaM2),
+      centroidLat:g.centroid?+g.centroid[0].toFixed(7):null,centroidLng:g.centroid?+g.centroid[1].toFixed(7):null,
+      nearestCbc:g.nearestCbc,nearestDistanceKm:g.nearestKm,zone:g.zone,zoneOut:!!g.zoneOut,
+      bankCode:String(d.bankCode),bankName:bk?bk.name:d.bankName,bankAccount:d.bankAccount.trim(),bankAccountName:d.bankAccountName.trim(),bankBranch:d.bankBranch.trim(),
+      images:images,
+      agreedAt:(d.existing&&d.existing.agreedAt&&!d.images.signature)?d.existing.agreedAt:nowISO(),termsVersion:cfg().termsVersion||'1',
+      privacyConsentAt:(d.existing&&d.existing.privacyConsentAt)||nowISO(),privacyVersion:cfg().privacyVersion||'1',
+    };
+    const r=await api('saveEntry',{entry:entry});
+    applyUpdated(r.entry);
+    toast(isEdit?'Resubmitted for data check':'Submitted for data check');
+    S.draft=null; S.view='list'; S.detailId=null; sig=null; renderTabs(); render(); window.scrollTo(0,0);
   }catch(e){
     toast('Could not submit: '+errMsg(e)); btn.disabled=false; btn.textContent=d.id?'Resubmit for data check':'Submit for data check';
   }finally{ S.busy=false; }
 }
 
-document.addEventListener('click',()=>{ const m=$('#acctMenu'),b=$('#acctBtn'); if(m){ m.hidden=true; } if(b) b.setAttribute('aria-expanded','false'); });
-/* board filters survive re-render via delegated handlers */
+/* ---------- admin ---------- */
+const ADMIN_TABS=[['users','Users'],['harvesters','Harvesters'],['cbcs','CBCs & zones'],['banks','Banks'],['settings','Settings & text'],['export','Export']];
+function viewAdmin(){
+  const t=S.adminTab;
+  return '<h2>Admin</h2><p class="muted">Manage who can sign in, onboard harvesters, keep the CBC coordinates and bank list current, and export the data.</p>'+
+    '<div class="subtabs">'+ADMIN_TABS.map(([id,l])=>'<button type="button" data-atab="'+id+'" class="'+(t===id?'on':'')+'">'+l+'</button>').join('')+'</div>'+
+    ({users:adminUsers,harvesters:adminHarvesters,cbcs:adminCbcs,banks:adminBanks,settings:adminSettings,export:adminExport}[t]||adminUsers)();
+}
+function rolePick(roles,prefix){ return '<div class="rolepick">'+ALL_ROLES.concat(['admin']).map(r=>'<label><input type="checkbox" value="'+r+'"'+(roles.includes(r)?' checked':'')+'>'+esc(ROLE_DEFS[r].label)+'</label>').join('')+'</div>'; }
+function genPw(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; let s=''; for(let i=0;i<10;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+function adminUsers(){
+  const us=S.users.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  return '<div class="card"><h3>Add a user</h3><p class="small muted">The sign-in details are shown once after saving. The person sets their own password the first time they sign in.</p>'+
+    '<div class="grid two"><div class="field"><label>Full name</label><input id="nuName" autocomplete="off"></div><div class="field"><label>Username</label><input id="nuUser" autocomplete="off" autocapitalize="none" placeholder="e.g. jotieno"></div></div>'+
+    '<div class="field"><label>Roles</label>'+rolePick(['scout'])+'</div>'+
+    '<div class="field"><label>Temporary password</label><div class="row"><input id="nuPw" style="flex:1" autocomplete="off" value="'+genPw()+'"><button type="button" class="btn sm" id="nuGen">Generate</button></div></div>'+
+    '<button class="btn primary" id="nuSave">Add user</button><div id="nuCred"></div></div>'+
+    '<div class="card"><h3>Users</h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Name</th><th>Username</th><th>Roles</th><th>Status</th><th></th></tr></thead><tbody>'+
+    (us.length?us.map(u=>'<tr class="'+(u.active===false?'inactive':'')+'" data-user="'+esc(u.username)+'"><td><input value="'+esc(u.name)+'" data-f="name"></td><td class="n">'+esc(u.username)+'</td><td>'+rolePick(u.roles||[])+'</td><td class="n">'+(u.active===false?'<span class="tag off">Deactivated</span>':(u.mustChange?'<span class="tag">Temp password</span>':'<span class="tag on">Active</span>'))+'</td>'+
+      '<td class="n"><div class="actions"><button type="button" class="btn sm" data-usave>Save</button><button type="button" class="btn sm" data-ureset>Reset password</button>'+(u.username===S.me.username?'':'<button type="button" class="btn sm '+(u.active===false?'':'danger')+'" data-utoggle>'+(u.active===false?'Reactivate':'Deactivate')+'</button>')+'</div><div class="cred-slot"></div></td></tr>').join(''):'<tr><td colspan="5" class="faint">No users yet.</td></tr>')+
+    '</tbody></table></div></div>';
+}
+function adminHarvesters(){
+  const hs=S.harvesters.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  return '<div class="card"><h3>Onboard a harvester</h3><p class="small muted">Harvesters appear in the scout’s dropdown. The code should match the harvester’s partner account in the ERP (e.g. HARV083).</p>'+
+    '<div class="grid three"><div class="field"><label>Harvester name <span class="req">*</span></label><input id="nhName" autocomplete="off"></div><div class="field"><label>ERP code <span class="req">*</span></label><input id="nhCode" autocomplete="off" placeholder="HARV…" style="text-transform:uppercase"></div><div class="field"><label>Phone</label><input id="nhPhone" type="tel" inputmode="tel" autocomplete="off"></div></div>'+
+    '<div class="grid two"><div class="field"><label>ID number</label><input id="nhId" inputmode="numeric" autocomplete="off"></div><div class="field"><label>&nbsp;</label><button class="btn primary" id="nhSave">Onboard harvester</button></div></div></div>'+
+    '<div class="card"><div class="row between"><h3>Harvesters ('+hs.filter(h=>h.active!==false).length+' active)</h3><input id="hQ" type="search" placeholder="Filter…" style="max-width:220px" class="small"></div><div class="tblwrap"><table class="tbl" id="hTable"><thead><tr><th>Code</th><th>Name</th><th>Phone</th><th>ID number</th><th>Status</th><th></th></tr></thead><tbody>'+
+    (hs.length?hs.map(h=>'<tr class="'+(h.active===false?'inactive':'')+'" data-hcode="'+esc(h.code)+'"><td class="n">'+esc(h.code)+'</td><td><input value="'+esc(h.name)+'" data-f="name"></td><td><input value="'+esc(h.phone||'')+'" data-f="phone"></td><td><input value="'+esc(h.idNumber||'')+'" data-f="idNumber"></td><td class="n">'+(h.active===false?'<span class="tag off">Inactive</span>':'<span class="tag on">Active</span>')+'</td><td class="n"><div class="actions"><button type="button" class="btn sm" data-hsave>Save</button><button type="button" class="btn sm '+(h.active===false?'':'danger')+'" data-htoggle>'+(h.active===false?'Reactivate':'Deactivate')+'</button></div></td></tr>').join(''):'<tr><td colspan="6" class="faint">No harvesters yet.</td></tr>')+
+    '</tbody></table></div></div>';
+}
+function adminCbcs(){
+  const c=cfg();
+  return '<div class="card"><h3>Transport zones</h3><p class="small muted">Zones are linear-distance bands from the field centroid to the nearest CBC. With '+esc(c.zoneIntervalKm)+' km bands: '+(c.zones||[]).map((z,i)=>z+' ≤'+((i+1)*Number(c.zoneIntervalKm))+' km').join(', ')+'. Beyond the last band is flagged for GIS review.</p>'+
+    '<div class="grid two"><div class="field"><label>Band width (km)</label><input id="zInt" type="number" step="0.5" min="0.5" value="'+esc(c.zoneIntervalKm)+'"></div><div class="field"><label>Zone letters (comma separated, nearest first)</label><input id="zLet" value="'+esc((c.zones||[]).join(', '))+'"></div></div>'+
+    '<button class="btn primary" id="zSaveCfg">Save zone settings</button></div>'+
+    '<div class="card"><h3>Cane buying centres</h3><p class="small muted">The coordinates drive the nearest-CBC and zone calculation. Decimal degrees; south latitudes are negative.</p>'+
+    '<div class="tblwrap"><table class="tbl" id="cbcTable"><thead><tr><th>Name</th><th>Latitude</th><th>Longitude</th><th>Active</th><th></th></tr></thead><tbody>'+
+    S.cbcs.map((x,i)=>'<tr data-ci="'+i+'"><td><input value="'+esc(x.name)+'" data-f="name"></td><td><input type="number" step="any" value="'+esc(x.lat)+'" data-f="lat"></td><td><input type="number" step="any" value="'+esc(x.lng)+'" data-f="lng"></td><td class="n"><input type="checkbox" data-f="active"'+(x.active!==false?' checked':'')+'></td><td class="n"><button type="button" class="btn sm danger" data-cdel>Remove</button></td></tr>').join('')+
+    '</tbody></table></div><div class="actions" style="margin-top:10px"><button type="button" class="btn" id="cAdd">Add CBC</button><button type="button" class="btn primary" id="cSave">Save CBCs</button></div></div>';
+}
+function adminBanks(){
+  return '<div class="card"><h3>Banks</h3><p class="small muted">The bank name fills the bank code automatically on the form; the account-number length is enforced per bank.</p>'+
+    '<div class="tblwrap"><table class="tbl" id="bankTable"><thead><tr><th>Code</th><th>Bank name</th><th>Acct. no. digits</th><th>Active</th><th></th></tr></thead><tbody>'+
+    S.banks.map((b,i)=>'<tr data-bi="'+i+'"><td class="n"><input value="'+esc(b.code)+'" data-f="code" style="width:70px"></td><td><input value="'+esc(b.name)+'" data-f="name"></td><td class="n"><input type="number" min="1" max="30" value="'+esc(b.acctLength)+'" data-f="acctLength" style="width:80px"></td><td class="n"><input type="checkbox" data-f="active"'+(b.active!==false?' checked':'')+'></td><td class="n"><button type="button" class="btn sm danger" data-bdel>Remove</button></td></tr>').join('')+
+    '</tbody></table></div><div class="actions" style="margin-top:10px"><button type="button" class="btn" id="bAdd">Add bank</button><button type="button" class="btn primary" id="bSave">Save banks</button></div></div>';
+}
+function adminSettings(){
+  const c=cfg();
+  return '<div class="card"><h3>Form settings</h3>'+
+    '<div class="grid three"><div class="field"><label>Acreage unit shown</label><select id="cfgUnit"><option value="acres"'+(c.acreageUnit==='acres'?' selected':'')+'>acres</option><option value="ha"'+(c.acreageUnit==='ha'?' selected':'')+'>hectares</option></select></div>'+
+    '<div class="field"><label>Account number length</label><select id="cfgExact"><option value="1"'+(c.bankAcctExactLength!==false?' selected':'')+'>Must match the bank’s digit count</option><option value="0"'+(c.bankAcctExactLength===false?' selected':'')+'>Up to the bank’s digit count</option></select></div>'+
+    '<div class="field"><label>Required</label><label class="check" style="padding:6px 0"><input type="checkbox" id="cfgCard"'+(c.requireBankCard!==false?' checked':'')+'><span>Bank card photo</span></label><label class="check" style="padding:0"><input type="checkbox" id="cfgHarv"'+(c.requireHarvester!==false?' checked':'')+'><span>Harvester</span></label></div></div>'+
+    '<div class="grid two"><div class="field"><label>Areas (one per line, suggestions)</label><textarea id="cfgAreas" rows="5">'+esc((c.areas||[]).join('\n'))+'</textarea></div><div class="field"><label>Sublocations (one per line, suggestions)</label><textarea id="cfgSubs" rows="5">'+esc((c.sublocations||[]).join('\n'))+'</textarea></div></div>'+
+    '<button class="btn primary" id="saveCfg">Save settings</button></div>'+
+    '<div class="card"><h3>Terms and conditions</h3><p class="small muted">Use {NAME} and {ID} where the farmer’s name and ID number should appear. Change the version when the wording changes; each entry records the version it was signed against.</p>'+
+    '<div class="field"><label>Undertaking text</label><textarea id="cfgTerms" rows="7">'+esc(c.termsText||DEFAULT_TERMS)+'</textarea></div><div class="field" style="max-width:200px"><label>Version</label><input id="cfgTermsV" value="'+esc(c.termsVersion||'1')+'"></div>'+
+    '<button class="btn primary" id="saveTerms">Save terms</button></div>'+
+    '<div class="card"><h3>Data protection statement</h3><p class="small muted">Shown in full from the sign-in page, the account menu and the capture form. The capture form also shows a short summary and records the farmer’s consent against this version.</p>'+
+    '<div class="field"><label>Statement text</label><textarea id="cfgPriv" rows="10">'+esc(c.privacyText||DEFAULT_PRIVACY)+'</textarea></div><div class="field" style="max-width:200px"><label>Version</label><input id="cfgPrivV" value="'+esc(c.privacyVersion||'1')+'"></div>'+
+    '<button class="btn primary" id="savePriv">Save statement</button></div>';
+}
+function adminExport(){
+  return '<div class="card"><h3>Export</h3><p class="small muted">All entries as a CSV, one row per farmer, ready for the ERP or reconciliation. Polygons export as a GeoJSON for GIS.</p>'+
+    '<div class="actions"><button class="btn" id="exportCsv">Download entries CSV</button><button class="btn" id="exportGeo">Download polygons GeoJSON</button></div>'+
+    '<div class="small faint" style="margin-top:8px">'+S.entries.length+' entries · '+S.entries.filter(e=>e.polygon&&e.polygon.length>=3).length+' with polygons</div></div>';
+}
+function bindAdmin(){
+  $$('[data-atab]').forEach(b=>b.addEventListener('click',()=>{ S.adminTab=b.getAttribute('data-atab'); render(); }));
+  const on=(id,fn)=>{ const el=$(id); if(el) el.addEventListener('click',fn); };
+  const rowRoles=row=>[...row.querySelectorAll('.rolepick input:checked')].map(i=>i.value);
+  // users
+  on('#nuGen',()=>{ $('#nuPw').value=genPw(); });
+  on('#nuSave',()=>guard(async()=>{
+    const name=$('#nuName').value.trim(),username=$('#nuUser').value.trim().toLowerCase(),pw=$('#nuPw').value.trim();
+    const roles=rowRoles($('#nuSave').closest('.card'));
+    if(!name||!username){ toast('Enter the name and username.'); return; }
+    if(!/^[a-z0-9._-]{3,30}$/.test(username)){ toast('Username: 3–30 letters, digits, dots, dashes or underscores.'); return; }
+    if(pw.length<6){ toast('Temporary password: at least 6 characters.'); return; }
+    if(!roles.length){ toast('Tick at least one role.'); return; }
+    const d=await api('addUser',{name:name,username:username,roles:roles,tempPassword:pw});
+    S.users=d.users; toast('User added');
+    render(); $('#nuCred').innerHTML='<div class="cred">Sign-in details for <b>'+esc(name)+'</b> — shown once:<br>Username <code>'+esc(username)+'</code> · Temporary password <code>'+esc(pw)+'</code><br><span class="small">They will be asked to choose their own password at first sign-in.</span></div>';
+  }));
+  $$('[data-usave]').forEach(b=>b.addEventListener('click',()=>guard(async()=>{ const row=b.closest('tr'); const u=row.getAttribute('data-user'); const d=await api('updateUser',{username:u,name:row.querySelector('[data-f=name]').value.trim(),roles:rowRoles(row)}); S.users=d.users; toast('Saved'); render(); })));
+  $$('[data-utoggle]').forEach(b=>b.addEventListener('click',()=>guard(async()=>{ const row=b.closest('tr'); const u=row.getAttribute('data-user'); const usr=S.users.find(x=>x.username===u); const act=usr.active===false; if(!act&&!confirm('Deactivate '+usr.name+'? They will not be able to sign in.')) return; const d=await api('updateUser',{username:u,active:act}); S.users=d.users; toast(act?'Reactivated':'Deactivated'); render(); })));
+  $$('[data-ureset]').forEach(b=>b.addEventListener('click',()=>guard(async()=>{ const row=b.closest('tr'); const u=row.getAttribute('data-user'); const pw=genPw(); if(!confirm('Set a new temporary password for '+userName(u)+'?')) return; const d=await api('resetPassword',{username:u,tempPassword:pw}); S.users=d.users; render(); const r2=document.querySelector('tr[data-user="'+CSS.escape(u)+'"] .cred-slot'); if(r2) r2.innerHTML='<div class="cred">Temporary password for <b>'+esc(userName(u))+'</b>: <code>'+esc(pw)+'</code></div>'; })));
+  // harvesters
+  on('#nhSave',()=>guard(async()=>{
+    const name=$('#nhName').value.trim().replace(/\s+/g,' '),code=$('#nhCode').value.trim().toUpperCase(),phone=$('#nhPhone').value.trim(),idNumber=$('#nhId').value.trim();
+    if(!name||!code){ toast('Enter the harvester name and ERP code.'); return; }
+    if(S.harvesters.find(h=>h.code===code)){ toast('Code '+code+' is already used.'); return; }
+    const list=S.harvesters.concat([{code:code,name:name,phone:phone,idNumber:idNumber,active:true}]);
+    const d=await api('saveList',{list:'harvesters',rows:list}); S.harvesters=d.rows; toast(name+' onboarded'); render();
+  }));
+  const hq=$('#hQ'); if(hq) hq.addEventListener('input',()=>{ const q=hq.value.trim().toLowerCase(); $$('#hTable tbody tr').forEach(tr=>{ tr.style.display=!q||tr.textContent.toLowerCase().includes(q)||[...tr.querySelectorAll('input')].some(i=>i.value.toLowerCase().includes(q))?'':'none'; }); });
+  $$('[data-hsave]').forEach(b=>b.addEventListener('click',()=>guard(async()=>{ const row=b.closest('tr'); const code=row.getAttribute('data-hcode'); const list=S.harvesters.map(h=>h.code===code?Object.assign({},h,{name:row.querySelector('[data-f=name]').value.trim(),phone:row.querySelector('[data-f=phone]').value.trim(),idNumber:row.querySelector('[data-f=idNumber]').value.trim()}):h); const d=await api('saveList',{list:'harvesters',rows:list}); S.harvesters=d.rows; toast('Saved'); })));
+  $$('[data-htoggle]').forEach(b=>b.addEventListener('click',()=>guard(async()=>{ const row=b.closest('tr'); const code=row.getAttribute('data-hcode'); const list=S.harvesters.map(h=>h.code===code?Object.assign({},h,{active:h.active===false}):h); const d=await api('saveList',{list:'harvesters',rows:list}); S.harvesters=d.rows; render(); })));
+  // cbcs & zones
+  on('#zSaveCfg',()=>guard(async()=>{ const step=Number($('#zInt').value); const letters=$('#zLet').value.split(',').map(s=>s.trim()).filter(Boolean); if(!(step>0)||!letters.length){ toast('Enter a band width and at least one zone letter.'); return; } await saveConfig({zoneIntervalKm:step,zones:letters}); render(); }));
+  const readCbcs=()=>$$('#cbcTable tbody tr').map(tr=>({name:tr.querySelector('[data-f=name]').value.trim(),lat:tr.querySelector('[data-f=lat]').value===''?null:Number(tr.querySelector('[data-f=lat]').value),lng:tr.querySelector('[data-f=lng]').value===''?null:Number(tr.querySelector('[data-f=lng]').value),active:tr.querySelector('[data-f=active]').checked}));
+  on('#cAdd',()=>{ S.cbcs=readCbcs(); S.cbcs.push({name:'',lat:null,lng:null,active:true}); render(); const rows=$$('#cbcTable tbody tr'); const last=rows[rows.length-1]; if(last) last.querySelector('input').focus(); });
+  $$('[data-cdel]').forEach(b=>b.addEventListener('click',()=>{ const tr=b.closest('tr'); const i=Number(tr.getAttribute('data-ci')); S.cbcs=readCbcs(); if(confirm('Remove '+(S.cbcs[i].name||'this CBC')+'? Existing entries keep the name they were captured with.')){ S.cbcs.splice(i,1); render(); } }));
+  on('#cSave',()=>guard(async()=>{ const rows=readCbcs().filter(c=>c.name); const bad=rows.find(c=>c.lat==null||c.lng==null||isNaN(c.lat)||isNaN(c.lng)||Math.abs(c.lat)>90||Math.abs(c.lng)>180); if(bad){ toast('Enter valid coordinates for '+bad.name+'.'); return; } const d=await api('saveList',{list:'cbcs',rows:rows}); S.cbcs=d.rows; toast('CBCs saved'); render(); }));
+  // banks
+  const readBanks=()=>$$('#bankTable tbody tr').map(tr=>({code:tr.querySelector('[data-f=code]').value.trim(),name:tr.querySelector('[data-f=name]').value.trim(),acctLength:Number(tr.querySelector('[data-f=acctLength]').value)||0,active:tr.querySelector('[data-f=active]').checked}));
+  on('#bAdd',()=>{ S.banks=readBanks(); S.banks.push({code:'',name:'',acctLength:10,active:true}); render(); });
+  $$('[data-bdel]').forEach(b=>b.addEventListener('click',()=>{ const tr=b.closest('tr'); const i=Number(tr.getAttribute('data-bi')); S.banks=readBanks(); if(confirm('Remove '+(S.banks[i].name||'this bank')+'?')){ S.banks.splice(i,1); render(); } }));
+  on('#bSave',()=>guard(async()=>{ const rows=readBanks().filter(b=>b.name||b.code); const bad=rows.find(b=>!b.code||!b.name||!(b.acctLength>0)); if(bad){ toast('Every bank needs a code, a name and the account-number digit count.'); return; } const d=await api('saveList',{list:'banks',rows:rows}); S.banks=d.rows; toast('Banks saved'); render(); }));
+  // settings
+  on('#saveCfg',()=>guard(async()=>{ const lines=id=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean); await saveConfig({acreageUnit:$('#cfgUnit').value,bankAcctExactLength:$('#cfgExact').value==='1',requireBankCard:$('#cfgCard').checked,requireHarvester:$('#cfgHarv').checked,areas:lines('#cfgAreas'),sublocations:lines('#cfgSubs')}); }));
+  on('#saveTerms',()=>guard(async()=>{ const t=$('#cfgTerms').value.trim(); if(!t.includes('{NAME}')||!t.includes('{ID}')){ toast('Keep {NAME} and {ID} in the text.'); return; } await saveConfig({termsText:t,termsVersion:$('#cfgTermsV').value.trim()||'1'}); }));
+  on('#savePriv',()=>guard(async()=>{ const t=$('#cfgPriv').value.trim(); if(t.length<50){ toast('The statement looks too short.'); return; } await saveConfig({privacyText:t,privacyVersion:$('#cfgPrivV').value.trim()||'1'}); }));
+  on('#exportCsv',exportCsv); on('#exportGeo',exportGeo);
+}
+async function saveConfig(patch){ const next=Object.assign({},S.config,patch); const d=await api('saveConfig',{config:next}); S.config=Object.assign({},DEFAULT_CONFIG,d.config||next); toast('Settings saved'); }
+function exportCsv(){
+  const cols=['id','status','farmerName','phone','idNumber','harvesterCode','harvesterName','plotLR','acreageAcres','acreageHa','areaM2','trips','area','sublocation','deliveryCbc','nearestCbc','nearestDistanceKm','zoneComputed','zoneOut','centroidLat','centroidLng','vertices','bankCode','bankName','bankAccount','bankAccountName','bankBranch','createdAt','createdBy','checkResult','checkedAt','checkedBy','erpRef','permitNumber','ccsClips','permitAt','permitBy','zoneFinal','cbcFinal','linearDistanceFinalKm','inspected','polygonQc','zonedAt','zonedBy','agreedTermsAt','termsVersion','privacyConsentAt','privacyVersion'];
+  const g=v=>{ v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const rows=[cols.join(',')];
+  S.entries.forEach(e=>{ const z=e.zoning||{},p=e.permit||{},c=e.check||{};
+    rows.push([e.id,e.status,e.farmerName,e.phone,e.idNumber,e.harvesterCode,e.harvesterName,e.plotLR,e.acreage,e.acreageHa,e.areaM2,e.trips,e.area,e.sublocation,e.cbc,e.nearestCbc,e.nearestDistanceKm,e.zone,e.zoneOut?'yes':'',e.centroidLat,e.centroidLng,(e.polygon||[]).length,e.bankCode,e.bankName,e.bankAccount,e.bankAccountName,e.bankBranch,e.createdAt,e.createdBy,c.result,c.at,c.by,c.erpRef,p.number,p.ccsClips,p.at,p.by,z.zone,z.cbc,z.linearDistance,z.inspected?'yes':'',z.polygonQc?'yes':'',z.at,z.by,e.agreedAt,e.termsVersion,e.privacyConsentAt,e.privacyVersion].map(g).join(',')); });
+  saveFile('\ufeff'+rows.join('\r\n'),'cane-permit-entries-'+new Date().toISOString().slice(0,10)+'.csv','text/csv');
+}
+function exportGeo(){
+  const feats=S.entries.filter(e=>e.polygon&&e.polygon.length>=3).map(e=>{ const ring=e.polygon.map(p=>[Number(p[1]),Number(p[0])]); ring.push(ring[0]); return {type:'Feature',properties:{id:e.id,status:e.status,farmer:e.farmerName,idNumber:e.idNumber,plotLR:e.plotLR,acres:e.acreage,ha:e.acreageHa,deliveryCbc:e.cbc,nearestCbc:e.nearestCbc,distanceKm:e.nearestDistanceKm,zone:e.zone,zoneFinal:(e.zoning&&e.zoning.zone)||'',permit:(e.permit&&e.permit.number)||'',harvester:e.harvesterName,capturedAt:e.createdAt,capturedBy:e.createdBy},geometry:{type:'Polygon',coordinates:[ring]}}; });
+  saveFile(JSON.stringify({type:'FeatureCollection',features:feats},null,1),'cane-permit-polygons-'+new Date().toISOString().slice(0,10)+'.geojson','application/geo+json');
+}
+
+/* ---------- delegated handlers ---------- */
 document.addEventListener('click',ev=>{
-  const b=ev.target.closest('[data-filter]'); if(!b) return;
-  S.boardFilter=b.getAttribute('data-filter'); render();
+  const b=ev.target.closest('[data-filter]'); if(b){ S.boardFilter=b.getAttribute('data-filter'); render(); return; }
+  const w=ev.target.closest('#who'); if(w&&S.loaded){ ev.stopPropagation(); toggleAcct(!$('#acctMenu')); return; }
+  if(!ev.target.closest('#acctMenu')) toggleAcct(false);
 });
 document.addEventListener('input',ev=>{
   if(ev.target.id!=='boardQ') return;
   S.boardQuery=ev.target.value;
   const list=document.querySelector('#main .list, #main .empty'); if(!list) return;
-  list.outerHTML=listOf(boardItems(),{showScout:true},'No entries match.'); bindList();
+  list.outerHTML=listOf(filteredBoard(),{showScout:true},'No entries match.'); bindList();
 });
 
 boot();
